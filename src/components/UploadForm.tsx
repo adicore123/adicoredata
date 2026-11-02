@@ -14,7 +14,7 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import { MODULES } from "@/lib/modules";
+import { MODULES, detectModule } from "@/lib/modules";
 import { MODULE_IDS, type ModuleId } from "@/lib/types";
 import { formatBytes } from "@/lib/format";
 
@@ -45,7 +45,21 @@ export default function UploadForm({
   const locked = !!defaultModule;
   const [module, setModule] = useState<ModuleId>(defaultModule ?? "recordings");
   const [overrideLock, setOverrideLock] = useState(false);
+  const [autoDetected, setAutoDetected] = useState(false);
+  const [manualPick, setManualPick] = useState(false);
   const ModuleIcon = MODULES[module].icon;
+
+  /** מוסיף קבצים, ובמסלול הכללי (וואטסאפ) גם מציע אוטומטית את המודול לפי סוגם */
+  const applyPicks = (added: Pick[]) => {
+    setPicks((prev) => [...prev, ...added]);
+    if (!locked && !manualPick && added.length) {
+      setModule(detectModule(added.map((p) => p.file)));
+      setAutoDetected(true);
+    }
+  };
+
+  const addFiles = (files: Iterable<File>) =>
+    applyPicks([...files].map((file) => ({ file, title: file.name })));
   const [picks, setPicks] = useState<Pick[]>([]);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -78,15 +92,12 @@ export default function UploadForm({
           ...received.map((_, i) => cache.delete(`/shared-file-${i}`)),
         ]);
         if (received.length) {
-          setPicks((prev) => [...prev, ...received]);
+          applyPicks(received);
           setShared(true);
         }
       } catch {}
     })();
   }, [fromShare]);
-
-  const addFiles = (files: Iterable<File>) =>
-    setPicks((prev) => [...prev, ...[...files].map((file) => ({ file, title: file.name }))]);
 
   const setTitle = (i: number, title: string) =>
     setPicks((prev) => prev.map((p, idx) => (idx === i ? { ...p, title } : p)));
@@ -148,7 +159,14 @@ export default function UploadForm({
         </div>
       ) : (
       <fieldset>
-        <legend className="mb-2 text-sm font-bold">לאיזה מודול לשייך?</legend>
+        <legend className="mb-2 flex items-center gap-2 text-sm font-bold">
+          לאיזה מודול לשייך?
+          {autoDetected && !manualPick && (
+            <span className="rounded-full bg-mint-100 px-2 py-0.5 text-[11px] font-bold text-mint-700">
+              זוהה אוטומטית
+            </span>
+          )}
+        </legend>
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {MODULE_IDS.map((id) => {
             const meta = MODULES[id];
@@ -158,7 +176,11 @@ export default function UploadForm({
               <button
                 key={id}
                 type="button"
-                onClick={() => setModule(id)}
+                onClick={() => {
+                  setModule(id);
+                  setManualPick(true);
+                  setAutoDetected(false);
+                }}
                 className={`flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-4 text-xs font-bold transition sm:text-sm ${
                   active
                     ? "border-mint-500 bg-mint-50 text-mint-700 shadow-soft"

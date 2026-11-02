@@ -9,16 +9,22 @@ import ItemsView from "@/components/ItemsView";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ module: string }> };
+type Props = {
+  params: Promise<{ module: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { module } = await params;
   return isModule(module) ? { title: MODULES[module].label } : {};
 }
 
-export default async function ModulePage({ params }: Props) {
+export default async function ModulePage({ params, searchParams }: Props) {
   const { module } = await params;
   if (!isModule(module)) notFound();
+
+  const sp = await searchParams;
+  const initialQuery = typeof sp.q === "string" ? sp.q : undefined;
 
   const meta = MODULES[module];
   const items = await store.list(module);
@@ -44,7 +50,7 @@ export default async function ModulePage({ params }: Props) {
         </Link>
       </header>
 
-      <ItemsView items={items} kind={module} />
+      <ItemsView items={items} kind={module} initialQuery={initialQuery} />
     </div>
   );
 }

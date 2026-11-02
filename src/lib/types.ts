@@ -12,6 +12,8 @@ export interface Item {
   mime: string;
   size: number;
   createdAt: string;
+  /** מועד מחיקה רכה — קיים רק לקבצים שבסל מיחזור */
+  deletedAt?: string;
 }
 
 export type NewItem = Omit<Item, "id" | "createdAt">;

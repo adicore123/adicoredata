@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Menu, Share2, Sparkles, Upload, X } from "lucide-react";
+import { LayoutDashboard, Menu, Search, Share2, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { MODULES } from "@/lib/modules";
 import { MODULE_IDS } from "@/lib/types";
 
@@ -11,7 +11,9 @@ function useLinks() {
   const pathname = usePathname();
   return [
     { href: "/", label: "ראשי", icon: LayoutDashboard },
+    { href: "/search", label: "חיפוש", icon: Search },
     ...MODULE_IDS.map((id) => ({ href: `/${id}`, label: MODULES[id].label, icon: MODULES[id].icon })),
+    { href: "/trash", label: "סל מיחזור", icon: Trash2 },
   ].map((link) => ({ ...link, active: pathname === link.href }));
 }
 

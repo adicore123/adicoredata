@@ -24,9 +24,17 @@ import AudioPlayer from "@/components/AudioPlayer";
 
 type Dialog = { type: "rename"; item: Item } | { type: "delete"; item: Item } | null;
 
-export default function ItemsView({ items, kind }: { items: Item[]; kind: ModuleId }) {
+export default function ItemsView({
+  items,
+  kind,
+  initialQuery,
+}: {
+  items: Item[];
+  kind: ModuleId;
+  initialQuery?: string;
+}) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [dialog, setDialog] = useState<Dialog>(null);
   const [lightbox, setLightbox] = useState<Item | null>(null);
   const [pending, startTransition] = useTransition();
@@ -333,7 +341,7 @@ function DialogPortal({
           <>
             <h3 className="text-base font-bold">מחיקת קובץ</h3>
             <p className="mt-2 text-sm text-slate-500">
-              למחוק את "{dialog.item.title}"? לא ניתן לשחזר את הקובץ לאחר המחיקה.
+              "{dialog.item.title}" יועבר לסל מיחזור — ניתן יהיה לשחזר אותו עד 30 יום.
             </p>
             <div className="mt-5 flex gap-2">
               <button

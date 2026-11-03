@@ -21,6 +21,7 @@ import { MODULES } from "@/lib/modules";
 import { MODULE_IDS } from "@/lib/types";
 import { formatBytes, formatDate } from "@/lib/format";
 import AudioPlayer from "@/components/AudioPlayer";
+import EditableTitle from "@/components/EditableTitle";
 
 type Dialog = { type: "rename"; item: Item } | { type: "delete"; item: Item } | null;
 
@@ -144,7 +145,9 @@ export default function ItemsView({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="min-w-0 truncate text-sm font-bold">{item.title}</h3>
+                  <div className="min-w-0 flex-1">
+                    <EditableTitle id={item.id} title={item.title} />
+                  </div>
                   <div className="flex shrink-0 items-center">{actions(item)}</div>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -166,7 +169,9 @@ export default function ItemsView({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="min-w-0 truncate text-sm font-bold">{item.title}</h3>
+                  <div className="min-w-0 flex-1">
+                    <EditableTitle id={item.id} title={item.title} />
+                  </div>
                   <div className="flex shrink-0 items-center">
                     <a
                       href={`/api/files/${item.id}`}
@@ -199,7 +204,9 @@ export default function ItemsView({
       {lightbox && (
         <div className="fixed inset-0 z-50 flex flex-col bg-slate-900/85 p-4 backdrop-blur-sm fade-in">
           <div className="flex items-center justify-between gap-3 text-white">
-            <p className="min-w-0 truncate text-sm font-bold">{lightbox.title}</p>
+            <div className="min-w-0 flex-1">
+              <EditableTitle id={lightbox.id} title={lightbox.title} tone="light" />
+            </div>
             <div className="flex shrink-0 items-center gap-1">
               <div className="rtl:flex-row-reverse flex items-center">{actions(lightbox)}</div>
               <button

@@ -1,16 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Download,
-  ExternalLink,
-  FileArchive,
-  FileSpreadsheet,
-  FileText,
+  Eye,
   Loader2,
   Pencil,
+  Play,
   Search,
   Trash2,
   Upload,
@@ -23,6 +21,7 @@ import { formatBytes, formatDate } from "@/lib/format";
 import AudioPlayer from "@/components/AudioPlayer";
 import EditableTitle from "@/components/EditableTitle";
 import WhatsAppShare from "@/components/WhatsAppShare";
+import MediaLightbox from "@/components/MediaLightbox";
 
 type Dialog = { type: "rename"; item: Item } | { type: "delete"; item: Item } | null;
 
@@ -38,7 +37,8 @@ export default function ItemsView({
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery ?? "");
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [lightbox, setLightbox] = useState<Item | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [preview, setPreview] = useState<Item | null>(null);
   const [pending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -103,38 +103,59 @@ export default function ItemsView({
       )}
 
       {kind === "images" && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift"
-            >
-              <button
-                onClick={() => setLightbox(item)}
-                aria-label={`צפייה ב${item.title}`}
-                className="absolute inset-0"
+        <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">
+          {filtered.map((item, i) => {
+            const isVideo = item.mime.startsWith("video");
+            return (
+              <div
+                key={item.id}
+                className="group relative mb-3 break-inside-avoid overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/files/${item.id}`}
-                  alt={item.title}
-                  loading="lazy"
-                  className="size-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-slate-900/70 to-transparent px-3 pt-8 pb-2.5 text-start text-xs font-medium text-white">
-                  {item.title}
-                </span>
-              </button>
-              <button
-                onClick={() => setDialog({ type: "rename", item })}
-                aria-label={`עריכת כותרת: ${item.title}`}
-                title="עריכת כותרת ומודול"
-                className="absolute end-2 top-2 grid size-8 place-items-center rounded-xl bg-white/85 text-slate-600 shadow-soft backdrop-blur transition hover:bg-white hover:text-mint-700"
-              >
-                <Pencil className="size-4" />
-              </button>
-            </div>
-          ))}
+                <button
+                  onClick={() => setLightboxIndex(i)}
+                  aria-label={`צפייה ב${item.title}`}
+                  className="block w-full"
+                >
+                  {isVideo ? (
+                    <span className="relative block">
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <video
+                        src={`/api/files/${item.id}`}
+                        preload="metadata"
+                        muted
+                        playsInline
+                        className="w-full"
+                      />
+                      <span className="absolute inset-0 grid place-items-center">
+                        <span className="grid size-12 place-items-center rounded-full bg-mint-600/90 text-white shadow-lift backdrop-blur">
+                          <Play className="size-6 fill-current" />
+                        </span>
+                      </span>
+                    </span>
+                  ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={`/api/files/${item.id}`}
+                      alt={item.title}
+                      loading="lazy"
+                      className="w-full transition duration-300 group-hover:scale-[1.02]"
+                    />
+                  )}
+                  <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-slate-900/70 to-transparent px-3 pt-8 pb-2.5 text-start text-xs font-medium text-white">
+                    {item.title}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setDialog({ type: "rename", item })}
+                  aria-label={`עריכת כותרת: ${item.title}`}
+                  title="עריכת כותרת ומודול"
+                  className="absolute end-2 top-2 grid size-8 place-items-center rounded-xl bg-white/85 text-slate-600 shadow-soft backdrop-blur transition hover:bg-white hover:text-mint-700"
+                >
+                  <Pencil className="size-4" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -155,7 +176,7 @@ export default function ItemsView({
                 <p className="mt-0.5 text-xs text-slate-500">
                   {formatDate(item.createdAt)} · {formatBytes(item.size)}
                 </p>
-                <AudioPlayer src={`/api/files/${item.id}`} />
+                <AudioPlayer item={item} />
               </div>
             </article>
           ))}
@@ -175,16 +196,14 @@ export default function ItemsView({
                     <EditableTitle id={item.id} title={item.title} />
                   </div>
                   <div className="flex shrink-0 items-center">
-                    <a
-                      href={`/api/files/${item.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="פתיחה"
-                      title="פתיחה"
+                    <button
+                      onClick={() => setPreview(item)}
+                      aria-label="תצוגה מקדימה"
+                      title="תצוגה מקדימה"
                       className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-mint-700"
                     >
-                      <ExternalLink className="size-4" />
-                    </a>
+                      <Eye className="size-4" />
+                    </button>
                     {actions(item)}
                   </div>
                 </div>
@@ -203,34 +222,17 @@ export default function ItemsView({
         </div>
       )}
 
-      {lightbox && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-slate-900/85 p-4 backdrop-blur-sm fade-in">
-          <div className="flex items-center justify-between gap-3 text-white">
-            <div className="min-w-0 flex-1">
-              <EditableTitle id={lightbox.id} title={lightbox.title} tone="light" />
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <div className="rtl:flex-row-reverse flex items-center">{actions(lightbox)}</div>
-              <button
-                onClick={() => setLightbox(null)}
-                aria-label="סגירה"
-                className="grid size-8 place-items-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-1 items-center justify-center overflow-hidden py-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/files/${lightbox.id}`}
-              alt={lightbox.title}
-              className="max-h-full max-w-full rounded-2xl object-contain shadow-2xl"
-              onClick={() => setLightbox(null)}
-            />
-          </div>
-        </div>
+      {lightboxIndex !== null && filtered[lightboxIndex] && (
+        <MediaLightbox
+          items={filtered}
+          index={lightboxIndex}
+          onIndex={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onRename={(item) => setDialog({ type: "rename", item })}
+        />
       )}
+
+      {preview && <DocPreview item={preview} onClose={() => setPreview(null)} />}
 
       {dialog && (
         <DialogPortal
@@ -247,6 +249,99 @@ export default function ItemsView({
 function ModuleIconOf({ item }: { item: Item }) {
   const Icon = MODULES[item.module].icon;
   return <Icon className="size-5" />;
+}
+
+/** תצוגה מקדימה של מסמך: PDF בנגן המובנה, טקסט קריא, וידאו בנגן — בלי לרדת מהמערכת */
+function DocPreview({ item, onClose }: { item: Item; onClose: () => void }) {
+  const isPdf = item.mime === "application/pdf" || item.ext === ".pdf";
+  const isVideo = item.mime.startsWith("video");
+  const isText =
+    item.mime.startsWith("text/") || [".txt", ".md", ".csv", ".json", ".log"].includes(item.ext);
+  const [text, setText] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!isText) return;
+    let alive = true;
+    fetch(`/api/files/${item.id}`)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error())))
+      .then((t) => alive && setText(t.slice(0, 200_000)))
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [item.id, isText]);
+
+  return (
+    <div className="fade-in fixed inset-0 z-50 grid place-items-center bg-slate-900/70 p-3 backdrop-blur-sm sm:p-6">
+      <button aria-label="סגירה" onClick={onClose} className="absolute inset-0" />
+      <div className="card relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden p-0">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+          <p className="min-w-0 flex-1 truncate text-sm font-bold">{item.title}</p>
+          <div className="flex shrink-0 items-center gap-1">
+            <WhatsAppShare item={item} />
+            <a
+              href={`/api/files/${item.id}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="פתיחה בטאב חדש"
+              title="פתיחה בטאב חדש"
+              className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-mint-700"
+            >
+              <Download className="size-4" />
+            </a>
+            <button
+              onClick={onClose}
+              aria-label="סגירה"
+              className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto bg-slate-50">
+          {isVideo && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video src={`/api/files/${item.id}`} controls autoPlay playsInline className="max-h-[70vh] w-full bg-black" />
+          )}
+          {isPdf && (
+            <iframe
+              src={`/api/files/${item.id}#toolbar=1`}
+              title={item.title}
+              className="h-[70vh] w-full bg-white"
+            />
+          )}
+          {isText &&
+            (failed ? (
+              <p className="p-6 text-center text-sm text-slate-500">טעינת הטקסט נכשלה — נסו להוריד את הקובץ.</p>
+            ) : text === null ? (
+              <p className="flex items-center justify-center gap-2 p-6 text-sm text-slate-500">
+                <Loader2 className="size-4 animate-spin" /> טוען…
+              </p>
+            ) : (
+              <pre dir="auto" className="p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                {text}
+              </pre>
+            ))}
+          {!isVideo && !isPdf && !isText && (
+            <div className="grid place-items-center gap-3 p-10 text-center">
+              <p className="text-sm text-slate-500">
+                אין תצוגה מקדימה לסוג הקובץ הזה ({item.ext || item.mime || "לא ידוע"}).
+              </p>
+              <a
+                href={`/api/files/${item.id}`}
+                download={item.name}
+                className="inline-flex items-center gap-2 rounded-2xl bg-mint-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-mint-700"
+              >
+                <Download className="size-4" /> הורדת הקובץ
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function DialogPortal({

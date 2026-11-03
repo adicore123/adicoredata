@@ -75,10 +75,12 @@ const MIMES: Record<string, string> = {
   ".ogg": "audio/ogg", ".opus": "audio/ogg", ".amr": "audio/amr", ".flac": "audio/flac",
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
   ".gif": "image/gif", ".heic": "image/heic", ".avif": "image/avif", ".svg": "image/svg+xml",
-  ".pdf": "application/pdf", ".txt": "text/plain", ".csv": "text/csv",
+  ".pdf": "application/pdf", ".txt": "text/plain", ".csv": "text/csv", ".md": "text/markdown",
   ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".xls": "application/vnd.ms-excel", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ".zip": "application/zip", ".json": "application/json",
+  ".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+  ".mkv": "video/x-matroska", ".3gp": "video/3gpp", ".avi": "video/x-msvideo",
 };
 
 export const mimeOf = (ext: string, fallback = "application/octet-stream") => MIMES[ext] ?? fallback;

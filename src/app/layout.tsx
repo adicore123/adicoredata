@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import PlayerProvider from "@/components/PlayerProvider";
 import PwaRegister from "@/components/PwaRegister";
 
 const rubik = Rubik({ subsets: ["hebrew", "latin"], variable: "--font-rubik" });
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="he" dir="rtl">
       <body className={`${rubik.variable} min-h-dvh font-sans text-slate-900 antialiased`}>
-        <AppShell>{children}</AppShell>
+        <PlayerProvider>
+          <AppShell>{children}</AppShell>
+        </PlayerProvider>
         <PwaRegister />
       </body>
     </html>

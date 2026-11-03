@@ -17,3 +17,4 @@ atlas-credentials.env
 
 data/uploads/*
 !data/uploads/.gitkeep
+*.wav

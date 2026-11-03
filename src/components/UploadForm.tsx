@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
-  CloudUpload,
   FileArchive,
   FileAudio,
   FileImage,
   FileSpreadsheet,
   FileText,
+  FolderOpen,
   Loader2,
-  Pencil,
+  Plus,
   Share2,
   X,
 } from "lucide-react";
@@ -19,20 +19,31 @@ import { MODULES, detectModule } from "@/lib/modules";
 import { MODULE_IDS, type ModuleId } from "@/lib/types";
 import { formatBytes } from "@/lib/format";
 
-interface Pick {
-  file: File;
-  /** שם פרטי מהמשתמש — ריק עד שנכתב, ואז נופל בחזרה לשם הקובץ המקורי */
+interface Row {
   title: string;
+  file: File | null;
 }
 
+const emptyRow: Row = { title: "", file: null };
+
 function PickIcon({ file }: { file: File }) {
-  const cls = "size-5";
-  const t = file.type;
-  if (t.startsWith("audio")) return <FileAudio className={`${cls} text-mint-600`} />;
-  if (t.startsWith("image")) return <FileImage className={`${cls} text-mint-600`} />;
-  if (/\.(xls|xlsx|csv)$/.test(file.name)) return <FileSpreadsheet className={`${cls} text-mint-600`} />;
-  if (/\.zip$/.test(file.name)) return <FileArchive className={`${cls} text-mint-600`} />;
-  return <FileText className={`${cls} text-mint-600`} />;
+  const cls = "size-5 text-mint-600";
+  if (file.type.startsWith("audio")) return <FileAudio className={cls} />;
+  if (file.type.startsWith("image")) return <FileImage className={cls} />;
+  if (/\.(xls|xlsx|csv)$/.test(file.name)) return <FileSpreadsheet className={cls} />;
+  if (/\.zip$/.test(file.name)) return <FileArchive className={cls} />;
+  return <FileText className={cls} />;
+}
+
+/** ממקד את שדה השם הריק הראשון — בדסקטופ בלבד, שלא תיפתח מקלדת במובייל לחינם */
+function focusFirstEmptyName() {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  setTimeout(() => {
+    const el = [...document.querySelectorAll<HTMLInputElement>("input[data-name-input]")].find(
+      (i) => !i.value,
+    );
+    el?.focus();
+  }, 80);
 }
 
 export default function UploadForm({
@@ -43,40 +54,51 @@ export default function UploadForm({
   fromShare?: boolean;
 }) {
   const router = useRouter();
-  // הגעה מעמוד מודול — המודול נעול ואין צריך לבחור; בחירה ידנית רק מוואטסאפ/כללי
+  // הגעה מעמוד מודול — המודול נעול; בחירה ידנית רק במסלול הכללי (וואטסאפ)
   const locked = !!defaultModule;
   const [module, setModule] = useState<ModuleId>(defaultModule ?? "recordings");
   const [overrideLock, setOverrideLock] = useState(false);
   const [autoDetected, setAutoDetected] = useState(false);
   const [manualPick, setManualPick] = useState(false);
-  const ModuleIcon = MODULES[module].icon;
-
-  /** מוסיף קבצים, ובמסלול הכללי (וואטסאפ) גם מציע אוטומטית את המודול לפי סוגם */
-  const applyPicks = (added: Pick[]) => {
-    setPicks((prev) => [...prev, ...added]);
-    if (!locked && !manualPick && added.length) {
-      setModule(detectModule(added.map((p) => p.file)));
-      setAutoDetected(true);
-    }
-    // פוקוס מיידי על שדה השם של הקובץ שזה עתה נבחר — השם ניתן ברגע הבחירה
-    setTimeout(() => {
-      const el = [...document.querySelectorAll<HTMLInputElement>("input[data-name-input]")].find(
-        (i) => !i.value,
-      );
-      el?.focus();
-      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }, 80);
-  };
-
-  const addFiles = (files: Iterable<File>) =>
-    applyPicks([...files].map((file) => ({ file, title: "" })));
-  const [picks, setPicks] = useState<Pick[]>([]);
+  // טופס מילוי: שורה ריקה ראשונה מופיעה מיד — קודם שם, אחר כך קובץ
+  const [rows, setRows] = useState<Row[]>([emptyRow]);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [shared, setShared] = useState(false);
+  const ModuleIcon = MODULES[module].icon;
 
-  // קליטת קבצים ששותפו מוואטסאפ דרך ה־Service Worker
+  useEffect(() => {
+    focusFirstEmptyName();
+  }, []);
+
+  const setRow = (i: number, patch: Partial<Row>) =>
+    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+
+  const suggestModule = (files: File[]) => {
+    if (!locked && !manualPick) {
+      setModule(detectModule(files));
+      setAutoDetected(true);
+    }
+  };
+
+  /** מצרף קבצים לטופס: ממלא שורות ריקות ומוסיף חדשות לפי הצורך */
+  const attachFiles = (files: File[]) => {
+    if (!files.length) return;
+    setRows((prev) => {
+      const next = prev.map((r) => ({ ...r }));
+      for (const f of files) {
+        const idx = next.findIndex((r) => !r.file);
+        if (idx !== -1) next[idx] = { ...next[idx], file: f };
+        else next.push({ title: "", file: f });
+      }
+      return next;
+    });
+    suggestModule(files);
+    focusFirstEmptyName();
+  };
+
+  // קליטת קבצים ששותפו מוואטסאפ דרך ה־Service Worker — נכנסים כשורות מוכנות, השם ריק וממתין למילוי
   useEffect(() => {
     if (!fromShare) return;
     (async () => {
@@ -85,43 +107,41 @@ export default function UploadForm({
         const cache = await caches.open("share-target");
         const meta = await cache.match("/shared-count");
         if (!meta) return;
-        const { count, title } = (await meta.json()) as { count: number; title?: string };
-        const received: Pick[] = [];
+        const { count } = (await meta.json()) as { count: number };
+        const received: File[] = [];
         for (let i = 0; i < count; i++) {
           const res = await cache.match(`/shared-file-${i}`);
           if (!res) continue;
           const blob = await res.blob();
           const name = decodeURIComponent(res.headers.get("x-file-name") ?? `file-${i + 1}`);
-          received.push({
-            file: new File([blob], name, { type: blob.type }),
-            title: "",
-          });
+          received.push(new File([blob], name, { type: blob.type }));
         }
         await Promise.all([
           cache.delete("/shared-count"),
           ...received.map((_, i) => cache.delete(`/shared-file-${i}`)),
         ]);
         if (received.length) {
-          applyPicks(received);
+          attachFiles(received);
           setShared(true);
         }
       } catch {}
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromShare]);
 
-  const setTitle = (i: number, title: string) =>
-    setPicks((prev) => prev.map((p, idx) => (idx === i ? { ...p, title } : p)));
+  const ready = rows.filter((r): r is Row & { file: File } => !!r.file);
+  const totalSize = ready.reduce((sum, r) => sum + r.file.size, 0);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!picks.length || busy) return;
+    if (!ready.length || busy) return;
     setBusy(true);
     setError("");
     try {
       const fd = new FormData();
       fd.set("module", module);
-      fd.set("titles", JSON.stringify(picks.map((p) => p.title)));
-      picks.forEach((p) => fd.append("files", p.file));
+      fd.set("titles", JSON.stringify(ready.map((r) => r.title)));
+      ready.forEach((r) => fd.append("files", r.file));
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "ההעלאה נכשלה");
       router.push(`/${module}`);
@@ -131,23 +151,19 @@ export default function UploadForm({
     }
   }
 
-  const totalSize = picks.reduce((sum, p) => sum + p.file.size, 0);
-
   return (
-    <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
+    <form onSubmit={submit} className="mx-auto max-w-2xl space-y-5">
       <header>
         <h1 className="text-2xl font-bold">העלאת קבצים{locked ? ` ל${MODULES[module].label}` : ""}</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {locked
-            ? "המודול כבר נבחר — רק הוסיפו קבצים ותנו לכל אחד כותרת."
-            : "בוחרים מודול, מוסיפים קבצים (כל סוג שהוא) ונותנים לכל קובץ כותרת משלו."}
+          טופס מילוי: קודם כותבים שם לקובץ, אחר כך בוחרים את הקובץ עצמו — ומעלים.
         </p>
       </header>
 
       {shared && (
         <p className="flex items-center gap-2 rounded-2xl border border-mint-200 bg-mint-50 px-4 py-3 text-sm font-semibold text-mint-800">
           <CheckCircle2 className="size-5 shrink-0" />
-          התקבל מוואטסאפ — בחרו מודול, ערכו כותרות ולחצו העלאה.
+          התקבל מוואטסאפ — הקבצים כבר מסומנים בטופס, רק תנו להם שמות ולחצו העלאה.
         </p>
       )}
 
@@ -191,7 +207,7 @@ export default function UploadForm({
                   setManualPick(true);
                   setAutoDetected(false);
                 }}
-                className={`flex flex-col items-center gap-2 rounded-2xl border-2 px-2 py-4 text-xs font-bold transition sm:text-sm ${
+                className={`flex min-h-16 flex-col items-center justify-center gap-2 rounded-2xl border-2 px-2 py-3 text-xs font-bold transition sm:text-sm ${
                   active
                     ? "border-mint-500 bg-mint-50 text-mint-700 shadow-soft"
                     : "border-slate-200 bg-white text-slate-500 hover:border-mint-300"
@@ -206,40 +222,87 @@ export default function UploadForm({
       </fieldset>
       )}
 
-      {picks.length > 0 && (
-        <ul className="card divide-y divide-slate-100">
-          {picks.map((p, i) => (
-            <li key={`${p.file.name}-${i}`} className="flex items-center gap-3 p-3.5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-mint-500/10">
-                <PickIcon file={p.file} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-slate-500">
-                  {p.file.name} · {formatBytes(p.file.size)}
-                </p>
-                <label className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-mint-700">
-                  <Pencil className="size-3" /> תנו שם משלכם לקובץ (ריק = שם הקובץ המקורי):
+      {/* שורות הטופס — שם קודם, קובץ אחר כך */}
+      <div className="space-y-3">
+        {rows.map((row, i) => (
+          <div key={i} className="card p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-400">קובץ {i + 1}</p>
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setRows((prev) => prev.filter((_, idx) => idx !== i))}
+                  aria-label={`הסרת שורה ${i + 1}`}
+                  className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+
+            <label htmlFor={`title-${i}`} className="mt-1 block text-sm font-bold text-slate-700">
+              שם הקובץ{" "}
+              <span className="font-normal text-slate-400">— השם שלכם, שכך גם יימצא בחיפוש</span>
+            </label>
+            <input
+              id={`title-${i}`}
+              data-name-input={i}
+              value={row.title}
+              onChange={(e) => setRow(i, { title: e.target.value })}
+              placeholder="למשל: שיעור 12 — פרשת השבוע"
+              className="mt-1.5 h-11 w-full rounded-xl border border-mint-300 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
+            />
+
+            <p className="mt-3 text-sm font-bold text-slate-700">הקובץ עצמו</p>
+            {row.file ? (
+              <div className="mt-1.5 flex min-h-11 items-center gap-3 rounded-xl border border-mint-200 bg-mint-50/60 px-3 py-2.5">
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-mint-600 shadow-sm">
+                  <PickIcon file={row.file} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{row.file.name}</span>
+                  <span className="block text-xs text-slate-500">{formatBytes(row.file.size)}</span>
+                </span>
+                <label
+                  htmlFor={`file-${i}`}
+                  className="cursor-pointer text-xs font-bold text-mint-700 underline underline-offset-4 transition hover:text-mint-900"
+                >
+                  החלפה
                 </label>
-                <input
-                  data-name-input={i}
-                  value={p.title}
-                  onChange={(e) => setTitle(i, e.target.value)}
-                  placeholder="✍ כתבו כאן שם משלכם — למשל: שיעור 12 — פרשת השבוע"
-                  className="mt-1 w-full rounded-xl border border-mint-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
-                />
               </div>
-              <button
-                type="button"
-                onClick={() => setPicks((prev) => prev.filter((_, idx) => idx !== i))}
-                aria-label={`הסרת ${p.file.name}`}
-                className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+            ) : (
+              <label
+                htmlFor={`file-${i}`}
+                className="mt-1.5 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-mint-300 bg-mint-50/40 text-sm font-bold text-mint-700 transition hover:border-mint-500 hover:bg-mint-50"
               >
-                <X className="size-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                <FolderOpen className="size-4" />
+                בחירת קובץ
+              </label>
+            )}
+            <input
+              id={`file-${i}`}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setRow(i, { file: f });
+                  suggestModule([f]);
+                }
+                e.target.value = "";
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setRows((prev) => [...prev, emptyRow])}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 py-3.5 text-sm font-bold text-slate-500 transition hover:border-mint-400 hover:text-mint-700"
+      >
+        <Plus className="size-4" /> הוספת קובץ נוסף
+      </button>
 
       <label
         onDragOver={(e) => {
@@ -250,23 +313,19 @@ export default function UploadForm({
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          addFiles(e.dataTransfer.files);
+          attachFiles([...e.dataTransfer.files]);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed px-6 py-10 text-center transition ${
-          dragging ? "border-mint-500 bg-mint-50" : "border-slate-300 bg-white/70 hover:border-mint-400 hover:bg-mint-50/40"
+        className={`block rounded-2xl px-4 py-2.5 text-center text-xs transition ${
+          dragging ? "border-2 border-dashed border-mint-500 bg-mint-50 font-bold text-mint-700" : "text-slate-400"
         }`}
       >
-        <span className="grid size-14 place-items-center rounded-full bg-mint-500/10 text-mint-600">
-          <CloudUpload className="size-7" />
-        </span>
-        <span className="text-sm font-bold">גררו קבצים לכאן או לחצו לבחירה</span>
-        <span className="text-xs text-slate-500">כל סוגי הקבצים · אפשר לבחור כמה קבצים יחד</span>
+        או גררו קבצים לכאן להוספה מהירה
         <input
           type="file"
           multiple
           className="hidden"
           onChange={(e) => {
-            addFiles(e.target.files ?? []);
+            attachFiles([...(e.target.files ?? [])]);
             e.target.value = "";
           }}
         />
@@ -279,7 +338,7 @@ export default function UploadForm({
       <div className="sticky bottom-4">
         <button
           type="submit"
-          disabled={!picks.length || busy}
+          disabled={!ready.length || busy}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mint-600 py-4 text-sm font-bold text-white shadow-lift transition hover:bg-mint-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           {busy ? (
@@ -287,7 +346,7 @@ export default function UploadForm({
               <Loader2 className="size-4 animate-spin" /> מעלה…
             </>
           ) : (
-            `העלאה${picks.length ? ` של ${picks.length} קבצים${totalSize ? ` · ${formatBytes(totalSize)}` : ""}` : ""}`
+            `העלאה${ready.length ? ` של ${ready.length} קבצים${totalSize ? ` · ${formatBytes(totalSize)}` : ""}` : ""}`
           )}
         </button>
       </div>

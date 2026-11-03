@@ -21,6 +21,7 @@ import { formatBytes } from "@/lib/format";
 
 interface Pick {
   file: File;
+  /** שם פרטי מהמשתמש — ריק עד שנכתב, ואז נופל בחזרה לשם הקובץ המקורי */
   title: string;
 }
 
@@ -60,7 +61,7 @@ export default function UploadForm({
   };
 
   const addFiles = (files: Iterable<File>) =>
-    applyPicks([...files].map((file) => ({ file, title: file.name })));
+    applyPicks([...files].map((file) => ({ file, title: "" })));
   const [picks, setPicks] = useState<Pick[]>([]);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -85,7 +86,7 @@ export default function UploadForm({
           const name = decodeURIComponent(res.headers.get("x-file-name") ?? `file-${i + 1}`);
           received.push({
             file: new File([blob], name, { type: blob.type }),
-            title: (i === 0 && title) || name,
+            title: "",
           });
         }
         await Promise.all([
@@ -240,12 +241,12 @@ export default function UploadForm({
                   {p.file.name} · {formatBytes(p.file.size)}
                 </p>
                 <label className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-mint-700">
-                  <Pencil className="size-3" /> שם הקובץ (לחיצה לעריכה — כך תמצאו אותו בחיפוש):
+                  <Pencil className="size-3" /> תנו שם משלכם לקובץ (ריק = שם הקובץ המקורי):
                 </label>
                 <input
                   value={p.title}
                   onChange={(e) => setTitle(i, e.target.value)}
-                  placeholder="למשל: שיעור 12 — פרשת השבוע"
+                  placeholder="✍ כתבו כאן שם משלכם — למשל: שיעור 12 — פרשת השבוע"
                   className="mt-1 w-full rounded-xl border border-mint-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
                 />
               </div>

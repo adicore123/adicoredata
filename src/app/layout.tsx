@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description: "ניהול הקלטות, תמונות ומסמכים — כולל שיתוף ישירות מוואטסאפ",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Adidata" },
 };
 
 export const viewport: Viewport = {

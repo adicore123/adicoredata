@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Menu, Search, Share2, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { LayoutDashboard, Menu, Search, Share2, Smartphone, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { MODULES } from "@/lib/modules";
 import { MODULE_IDS } from "@/lib/types";
+import InstallPrompt from "@/components/InstallPrompt";
 
 function useLinks() {
   const pathname = usePathname();
@@ -58,6 +59,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             אחרי התקנת האפליקציה: שתפו קובץ מוואטסאפ ← בחרו "Adidata", והוא ייפתח כאן להעלאה.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("adidata:install"))}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-mint-300 bg-white px-4 py-2.5 text-sm font-bold text-mint-700 transition hover:bg-mint-50"
+        >
+          <Smartphone className="size-4" /> התקנת האפליקציה
+        </button>
         <Link
           href="/upload"
           onClick={onNavigate}
@@ -128,6 +136,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-24 sm:px-6">{children}</main>
+      <InstallPrompt />
     </div>
   );
 }

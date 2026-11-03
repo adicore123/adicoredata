@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+  CalendarDays,
   Download,
   Eye,
+  HardDrive,
   Loader2,
   Pencil,
   Play,
@@ -17,7 +19,7 @@ import {
 import type { Item, ModuleId } from "@/lib/types";
 import { MODULES } from "@/lib/modules";
 import { MODULE_IDS } from "@/lib/types";
-import { formatBytes, formatDate } from "@/lib/format";
+import { formatBytes, formatDate, relativeDate } from "@/lib/format";
 import AudioPlayer from "@/components/AudioPlayer";
 import EditableTitle from "@/components/EditableTitle";
 import WhatsAppShare from "@/components/WhatsAppShare";
@@ -161,23 +163,33 @@ export default function ItemsView({
 
       {kind === "recordings" && (
         <div className="space-y-3">
-          {filtered.map((item) => (
-            <article key={item.id} className="card flex items-start gap-4 p-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-mint-500/10 text-mint-600">
-                <ModuleIconOf item={item} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <EditableTitle id={item.id} title={item.title} />
+          {filtered.map((item, idx) => (
+            <article
+              key={item.id}
+              style={{ animationDelay: `${Math.min(idx, 10) * 60}ms` }}
+              className="card-in card relative overflow-hidden p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift sm:p-5"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-x-4 top-0 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent"
+              />
+              <div className="flex items-start gap-3.5">
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-mint-400 to-mint-600 text-white shadow-soft">
+                  <ModuleIconOf item={item} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <EditableTitle id={item.id} title={item.title} />
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5 rounded-xl bg-slate-100/70 p-0.5">
+                      {actions(item)}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center">{actions(item)}</div>
+                  <MetaRow item={item} />
                 </div>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {formatDate(item.createdAt)} · {formatBytes(item.size)}
-                </p>
-                <AudioPlayer item={item} />
               </div>
+              <AudioPlayer item={item} />
             </article>
           ))}
         </div>
@@ -185,37 +197,39 @@ export default function ItemsView({
 
       {kind === "documents" && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {filtered.map((item) => (
-            <article key={item.id} className="card flex items-start gap-4 p-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-mint-500/10 text-mint-600">
-                <ModuleIconOf item={item} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <EditableTitle id={item.id} title={item.title} />
+          {filtered.map((item, idx) => (
+            <article
+              key={item.id}
+              style={{ animationDelay: `${Math.min(idx, 10) * 60}ms` }}
+              className="card-in card relative overflow-hidden p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift sm:p-5"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-x-4 top-0 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent"
+              />
+              <div className="flex items-start gap-3.5">
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-mint-400 to-mint-600 text-white shadow-soft">
+                  <ModuleIconOf item={item} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <EditableTitle id={item.id} title={item.title} />
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5 rounded-xl bg-slate-100/70 p-0.5">
+                      <button
+                        onClick={() => setPreview(item)}
+                        aria-label="תצוגה מקדימה"
+                        title="תצוגה מקדימה"
+                        className="grid size-7 place-items-center rounded-lg text-slate-400 transition hover:text-mint-700"
+                      >
+                        <Eye className="size-4" />
+                      </button>
+                      {actions(item)}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center">
-                    <button
-                      onClick={() => setPreview(item)}
-                      aria-label="תצוגה מקדימה"
-                      title="תצוגה מקדימה"
-                      className="grid size-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-mint-700"
-                    >
-                      <Eye className="size-4" />
-                    </button>
-                    {actions(item)}
-                  </div>
+                  <MetaRow item={item} />
                 </div>
-                <p className="mt-0.5 truncate text-xs text-slate-500">{item.name}</p>
-                <p className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
-                  {item.ext && (
-                    <span className="rounded-md bg-mint-50 px-1.5 py-0.5 font-bold text-mint-700">
-                      {item.ext.replace(".", "").toUpperCase()}
-                    </span>
-                  )}
-                  {formatDate(item.createdAt)} · {formatBytes(item.size)}
-                </p>
               </div>
             </article>
           ))}
@@ -249,6 +263,30 @@ export default function ItemsView({
 function ModuleIconOf({ item }: { item: Item }) {
   const Icon = MODULES[item.module].icon;
   return <Icon className="size-5" />;
+}
+
+/** מטא-שורה עשירה: תאריך יחסי, גודל, סוג קובץ ושם מקורי */
+function MetaRow({ item }: { item: Item }) {
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+      <span className="flex items-center gap-1">
+        <CalendarDays className="size-3.5 text-mint-500" />
+        {relativeDate(item.createdAt)}
+      </span>
+      <span className="flex items-center gap-1">
+        <HardDrive className="size-3.5 text-mint-500" />
+        {formatBytes(item.size)}
+      </span>
+      {item.ext && (
+        <span className="rounded-md bg-mint-50 px-1.5 py-0.5 text-[10px] font-extrabold text-mint-700">
+          {item.ext.replace(".", "").toUpperCase()}
+        </span>
+      )}
+      <span className="min-w-0 max-w-48 truncate text-slate-400" title={item.name}>
+        {item.name}
+      </span>
+    </div>
+  );
 }
 
 /** תצוגה מקדימה של מסמך: PDF בנגן המובנה, טקסט קריא, וידאו בנגן — בלי לרדת מהמערכת */

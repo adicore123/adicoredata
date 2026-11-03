@@ -4,6 +4,7 @@
   "description": "ניהול הקלטות, תמונות ומסמכים — כולל שיתוף ישירות מוואטסאפ",
   "lang": "he",
   "dir": "rtl",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

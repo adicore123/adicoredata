@@ -58,6 +58,14 @@ export default function UploadForm({
       setModule(detectModule(added.map((p) => p.file)));
       setAutoDetected(true);
     }
+    // פוקוס מיידי על שדה השם של הקובץ שזה עתה נבחר — השם ניתן ברגע הבחירה
+    setTimeout(() => {
+      const el = [...document.querySelectorAll<HTMLInputElement>("input[data-name-input]")].find(
+        (i) => !i.value,
+      );
+      el?.focus();
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 80);
   };
 
   const addFiles = (files: Iterable<File>) =>
@@ -198,6 +206,41 @@ export default function UploadForm({
       </fieldset>
       )}
 
+      {picks.length > 0 && (
+        <ul className="card divide-y divide-slate-100">
+          {picks.map((p, i) => (
+            <li key={`${p.file.name}-${i}`} className="flex items-center gap-3 p-3.5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-mint-500/10">
+                <PickIcon file={p.file} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium text-slate-500">
+                  {p.file.name} · {formatBytes(p.file.size)}
+                </p>
+                <label className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-mint-700">
+                  <Pencil className="size-3" /> תנו שם משלכם לקובץ (ריק = שם הקובץ המקורי):
+                </label>
+                <input
+                  data-name-input={i}
+                  value={p.title}
+                  onChange={(e) => setTitle(i, e.target.value)}
+                  placeholder="✍ כתבו כאן שם משלכם — למשל: שיעור 12 — פרשת השבוע"
+                  className="mt-1 w-full rounded-xl border border-mint-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setPicks((prev) => prev.filter((_, idx) => idx !== i))}
+                aria-label={`הסרת ${p.file.name}`}
+                className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <X className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <label
         onDragOver={(e) => {
           e.preventDefault();
@@ -228,40 +271,6 @@ export default function UploadForm({
           }}
         />
       </label>
-
-      {picks.length > 0 && (
-        <ul className="card divide-y divide-slate-100">
-          {picks.map((p, i) => (
-            <li key={`${p.file.name}-${i}`} className="flex items-center gap-3 p-3.5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-mint-500/10">
-                <PickIcon file={p.file} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-slate-500">
-                  {p.file.name} · {formatBytes(p.file.size)}
-                </p>
-                <label className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-mint-700">
-                  <Pencil className="size-3" /> תנו שם משלכם לקובץ (ריק = שם הקובץ המקורי):
-                </label>
-                <input
-                  value={p.title}
-                  onChange={(e) => setTitle(i, e.target.value)}
-                  placeholder="✍ כתבו כאן שם משלכם — למשל: שיעור 12 — פרשת השבוע"
-                  className="mt-1 w-full rounded-xl border border-mint-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setPicks((prev) => prev.filter((_, idx) => idx !== i))}
-                aria-label={`הסרת ${p.file.name}`}
-                className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-              >
-                <X className="size-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
 
       {error && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>

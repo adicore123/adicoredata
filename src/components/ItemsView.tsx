@@ -22,6 +22,7 @@ import { MODULE_IDS } from "@/lib/types";
 import { formatBytes, formatDate } from "@/lib/format";
 import AudioPlayer from "@/components/AudioPlayer";
 import EditableTitle from "@/components/EditableTitle";
+import WhatsAppShare from "@/components/WhatsAppShare";
 
 type Dialog = { type: "rename"; item: Item } | { type: "delete"; item: Item } | null;
 
@@ -51,6 +52,7 @@ export default function ItemsView({
 
   const actions = (item: Item) => (
     <>
+      <WhatsAppShare item={item} />
       <a
         href={`/api/files/${item.id}`}
         download={item.name}

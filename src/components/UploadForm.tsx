@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   FileText,
   Loader2,
+  Pencil,
   Share2,
   X,
 } from "lucide-react";
@@ -238,14 +239,14 @@ export default function UploadForm({
                 <p className="truncate text-xs font-medium text-slate-500">
                   {p.file.name} · {formatBytes(p.file.size)}
                 </p>
-                <label className="mt-1 block text-[11px] font-bold text-mint-700">
-                  השם של הקובץ — כך גם תמצאו אותו בחיפוש:
+                <label className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-mint-700">
+                  <Pencil className="size-3" /> שם הקובץ (לחיצה לעריכה — כך תמצאו אותו בחיפוש):
                 </label>
                 <input
                   value={p.title}
                   onChange={(e) => setTitle(i, e.target.value)}
                   placeholder="למשל: שיעור 12 — פרשת השבוע"
-                  className="mt-0.5 w-full rounded-lg bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-slate-400 focus:bg-mint-50/60 focus:px-2 focus:py-1"
+                  className="mt-1 w-full rounded-xl border border-mint-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-mint-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-200"
                 />
               </div>
               <button

@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${rubik.variable} min-h-dvh font-sans text-slate-900 antialiased`}>
         <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-app/80 backdrop-blur-xl">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/portfolio" className="flex items-center gap-2.5">
               <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-mint-400 to-mint-600 text-white shadow-soft">
                 <Layers className="size-5" />
               </span>

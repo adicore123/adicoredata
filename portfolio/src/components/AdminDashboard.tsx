@@ -232,7 +232,7 @@ export default function AdminDashboard({
 
       <p className="text-center text-xs text-slate-400">
         קישור לאתר הציבורי:{" "}
-        <Link href="/" className="font-semibold text-mint-600 underline underline-offset-4">
+        <Link href="/portfolio" className="font-semibold text-mint-600 underline underline-offset-4">
           AdiCore
         </Link>
       </p>

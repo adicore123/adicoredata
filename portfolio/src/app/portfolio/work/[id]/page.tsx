@@ -27,7 +27,7 @@ export default async function WorkPage({ params }: Props) {
   return (
     <div className="space-y-8">
       <Link
-        href="/#works"
+        href="/portfolio#works"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-700 transition hover:text-mint-900"
       >
         <ArrowRight className="size-4" /> חזרה לכל העבודות

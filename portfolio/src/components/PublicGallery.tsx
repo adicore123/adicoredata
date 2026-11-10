@@ -92,7 +92,7 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                   aria-hidden
                   className="absolute inset-x-4 top-0 z-10 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent"
                 />
-                <Link href={`/work/${work.id}`} className="block">
+                <Link href={`/portfolio/work/${work.id}`} className="block">
                   <div className="relative aspect-[4/3] overflow-hidden bg-mint-50">
                     {cover ? (
                       isVideo(cover) ? (

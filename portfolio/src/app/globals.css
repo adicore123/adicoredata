@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --color-app: #f5f8f7;
+
+  --color-mint-50: #effaf5;
+  --color-mint-100: #d7f3e7;
+  --color-mint-200: #b0e7d2;
+  --color-mint-300: #7ed6b7;
+  --color-mint-400: #45c297;
+  --color-mint-500: #1fa87e;
+  --color-mint-600: #0d8a66;
+  --color-mint-700: #0b6e53;
+  --color-mint-800: #0b5844;
+  --color-mint-900: #0a4838;
+
+  --shadow-soft: 0 1px 2px rgb(11 88 68 / 0.04), 0 12px 32px -16px rgb(13 138 102 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(11 88 68 / 0.05), 0 20px 48px -20px rgb(13 138 102 / 0.3);
+}
+
+body {
+  background:
+    radial-gradient(60rem 30rem at 85% -12%, rgb(69 194 151 / 0.12), transparent 60%),
+    radial-gradient(50rem 26rem at 0% 0%, rgb(126 214 183 / 0.1), transparent 55%),
+    var(--color-app);
+  background-attachment: fixed;
+}
+
+@utility card {
+  @apply rounded-3xl border border-slate-200/70 bg-white shadow-soft;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.card-in {
+  animation: card-in 0.35s ease-out backwards;
+}

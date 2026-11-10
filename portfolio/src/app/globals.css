@@ -47,10 +47,56 @@ body {
   }
 }
 
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-18px) scale(1.04);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 .fade-in {
   animation: fade-in 0.2s ease-out;
 }
 
 .card-in {
   animation: card-in 0.35s ease-out backwards;
+}
+
+.hero-in {
+  animation: fade-up 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.float-slow {
+  animation: float 9s ease-in-out infinite;
+}
+
+.float-slower {
+  animation: float 13s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .card-in,
+  .hero-in,
+  .float-slow,
+  .float-slower,
+  .fade-in {
+    animation: none !important;
+  }
 }

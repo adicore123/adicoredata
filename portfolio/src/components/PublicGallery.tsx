@@ -86,14 +86,14 @@ export default function PublicGallery({ works }: { works: Work[] }) {
               <article
                 key={work.id}
                 style={{ animationDelay: `${Math.min(idx, 9) * 60}ms` }}
-                className="card-in card group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+                className="card-in group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
               >
-                <span
-                  aria-hidden
-                  className="absolute inset-x-4 top-0 z-10 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent"
-                />
-                <Link href={`/portfolio/work/${work.id}`} className="block">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-mint-50">
+                <Link
+                  href={`/portfolio/work/${work.id}`}
+                  className="block aspect-[4/3] overflow-hidden bg-mint-50"
+                  aria-label={work.title}
+                >
+                  <span className="relative block size-full">
                     {cover ? (
                       isVideo(cover) ? (
                         <>
@@ -103,10 +103,10 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                             preload="metadata"
                             muted
                             playsInline
-                            className="size-full object-cover"
+                            className="size-full object-cover transition duration-700 group-hover:scale-105"
                           />
-                          <span className="absolute inset-0 grid place-items-center bg-slate-900/20">
-                            <span className="grid size-12 place-items-center rounded-full bg-white/90 text-mint-700 shadow-lift">
+                          <span className="absolute inset-0 grid place-items-center bg-slate-900/25 transition group-hover:bg-slate-900/15">
+                            <span className="grid size-12 place-items-center rounded-full bg-white/90 text-mint-700 shadow-lift transition group-hover:scale-110">
                               <Play className="size-6 fill-current" />
                             </span>
                           </span>
@@ -117,7 +117,7 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                           src={`/api/files/${cover.id}`}
                           alt={work.title}
                           loading="lazy"
-                          className="size-full object-cover transition duration-500 group-hover:scale-105"
+                          className="size-full object-cover transition duration-700 group-hover:scale-105"
                         />
                       ) : (
                         <span className="grid size-full place-items-center text-4xl">📄</span>
@@ -125,43 +125,34 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                     ) : (
                       <span className="grid size-full place-items-center text-4xl">🗂️</span>
                     )}
+
+                    {/* שכבת גרדיאנט + תוכן על התמונה */}
+                    <span className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/25 to-transparent" />
                     {work.featured && (
                       <span className="absolute end-3 top-3 grid size-8 place-items-center rounded-full bg-white/90 text-amber-400 shadow-soft backdrop-blur">
                         <Star className="size-4 fill-current" />
                       </span>
                     )}
-                  </div>
-                  <div className="p-4 sm:p-5">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="min-w-0 truncate text-base font-bold">{work.title}</h3>
-                      <span className="flex shrink-0 items-center gap-1 text-xs text-slate-400">
-                        <Eye className="size-3.5" /> {work.views}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                      {work.category && (
-                        <span className="rounded-md bg-mint-50 px-1.5 py-0.5 font-bold text-mint-700">
-                          {work.category}
-                        </span>
-                      )}
-                      {work.client && <span>{work.client}</span>}
-                      {work.year && <span>· {work.year}</span>}
-                    </div>
-                    {work.tags.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        {work.tags.slice(0, 4).map((t) => (
-                          <span key={t} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                            {t}
+                    <span className="absolute inset-x-0 bottom-0 p-4 sm:p-5 text-white">
+                      <span className="flex items-center gap-2">
+                        {work.category && (
+                          <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold backdrop-blur">
+                            {work.category}
                           </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        )}
+                        {work.year && <span className="text-[11px] font-semibold text-white/70">{work.year}</span>}
+                      </span>
+                      <span className="mt-1.5 block text-base font-bold leading-snug drop-shadow-sm">{work.title}</span>
+                      {work.client && (
+                        <span className="mt-0.5 block truncate text-xs text-white/70">{work.client}</span>
+                      )}
+                    </span>
+                  </span>
                 </Link>
                 {work.media.length > 1 && (
                   <button
                     onClick={() => setPreview({ work, index: 0 })}
-                    className="absolute bottom-4 start-4 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-bold text-mint-700 shadow-soft backdrop-blur transition hover:bg-white"
+                    className="absolute bottom-4 start-4 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-bold text-mint-700 shadow-soft backdrop-blur transition hover:scale-105 hover:bg-white"
                     title="תצוגה מקדימה מהירה"
                   >
                     תצוגה מקדימה ({work.media.length})

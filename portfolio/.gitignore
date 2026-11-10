@@ -10,3 +10,6 @@ next-env.d.ts
 
 data/uploads/*
 !data/uploads/.gitkeep
+
+.vercel
+.env*

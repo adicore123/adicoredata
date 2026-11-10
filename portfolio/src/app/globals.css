@@ -115,6 +115,19 @@ html {
   }
 }
 
+@keyframes word-up {
+  from {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
 /* ---------- utilities ---------- */
 
 .fade-in {
@@ -158,6 +171,25 @@ html {
   animation: preloader-fade 0.35s ease-out 0.55s both;
 }
 
+/* פיצול מילים — כל מילה עולה מתוך מסכה */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.word-up {
+  display: inline-block;
+  animation: word-up 0.65s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* מעבר עמוד חלק */
+.page-enter {
+  animation: page-enter 0.3s ease-out;
+}
+
 .noise::after {
   content: "";
   position: absolute;
@@ -181,7 +213,9 @@ html {
   .marquee-move,
   .underline-draw path,
   .preloader-logo,
-  .preloader-out {
+  .preloader-out,
+  .word-up,
+  .page-enter {
     animation: none !important;
   }
 }

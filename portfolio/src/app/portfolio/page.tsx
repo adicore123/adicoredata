@@ -1,6 +1,8 @@
 import { Sparkles } from "lucide-react";
 import { store } from "@/lib/store";
 import PublicGallery from "@/components/PublicGallery";
+import Marquee from "@/components/Marquee";
+import CountUp from "@/components/CountUp";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +12,9 @@ export default async function PortfolioHome() {
   const mediaCount = works.reduce((sum, w) => sum + w.media.length, 0);
 
   return (
-    <div className="space-y-12">
-      {/* Hero עסקי — צורות מרחפות וכניסה מדורגת */}
-      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-bl from-mint-800 via-mint-600 to-mint-400 px-6 py-14 text-white sm:px-12 sm:py-20">
+    <div className="space-y-0">
+      {/* Hero — טיפוגרפיה קינטית, צורות מרחפות, טקסטורת רעש וקו מצויר שמצטייר */}
+      <section className="noise relative overflow-hidden rounded-[2rem] bg-gradient-to-bl from-mint-800 via-mint-600 to-mint-400 px-6 py-14 text-white sm:px-12 sm:py-20">
         <div
           aria-hidden
           className="float-slow pointer-events-none absolute -start-24 -top-32 size-80 rounded-full bg-white/10 blur-[2px]"
@@ -35,7 +37,7 @@ export default async function PortfolioHome() {
         </p>
 
         <h1
-          className="hero-in relative mt-6 max-w-2xl text-4xl font-black leading-[1.12] sm:text-6xl"
+          className="hero-in relative mt-6 max-w-3xl text-[clamp(2.4rem,7vw,4.6rem)] font-black leading-[1.08] tracking-tight"
           style={{ animationDelay: "90ms" }}
         >
           עבודות שמדברות{" "}
@@ -45,9 +47,15 @@ export default async function PortfolioHome() {
               aria-hidden
               viewBox="0 0 200 12"
               preserveAspectRatio="none"
-              className="absolute -bottom-2 inset-x-0 h-3 w-full text-mint-300/70"
+              className="underline-draw absolute -bottom-2 inset-x-0 h-3 w-full text-mint-300/80"
             >
-              <path d="M2 9 C 60 -2, 140 -2, 198 8" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
+              <path
+                d="M2 9 C 60 -2, 140 -2, 198 8"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+              />
             </svg>
           </span>
         </h1>
@@ -63,23 +71,26 @@ export default async function PortfolioHome() {
         <div className="hero-in relative mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "270ms" }}>
           <a
             href="#works"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-bold text-mint-700 shadow-lift transition hover:scale-[1.03] hover:bg-mint-50 active:scale-100"
+            className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-bold text-mint-700 shadow-lift transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-100"
           >
             לצפייה בעבודות
           </a>
           {works.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur">
-                {works.length} פרויקטים
+              <span className="flex items-baseline gap-1.5 rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur">
+                <CountUp to={works.length} />
+                <span className="font-medium text-mint-50/80">פרויקטים</span>
               </span>
               {categories.size > 0 && (
-                <span className="rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur">
-                  {categories.size} קטגוריות
+                <span className="flex items-baseline gap-1.5 rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur">
+                  <CountUp to={categories.size} duration={900} />
+                  <span className="font-medium text-mint-50/80">קטגוריות</span>
                 </span>
               )}
               {mediaCount > 0 && (
-                <span className="hidden rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur sm:inline-block">
-                  {mediaCount} קבצי הדגמה
+                <span className="hidden items-baseline gap-1.5 rounded-2xl bg-white/15 px-4 py-3.5 text-sm font-bold backdrop-blur sm:flex">
+                  <CountUp to={mediaCount} duration={1300} />
+                  <span className="font-medium text-mint-50/80">קבצי הדגמה</span>
                 </span>
               )}
             </div>
@@ -87,7 +98,13 @@ export default async function PortfolioHome() {
         </div>
       </section>
 
-      <div id="works" className="scroll-mt-24">
+      {/* סרט מילות שירות */}
+      <div className="mt-6 rounded-[2rem]">
+        <Marquee />
+      </div>
+
+      {/* פס Spotlight כהה עם העבודות */}
+      <div id="works" className="scroll-mt-24 pt-10">
         <PublicGallery works={works} />
       </div>
     </div>

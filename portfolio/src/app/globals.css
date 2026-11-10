@@ -34,6 +34,17 @@ body {
   @apply rounded-3xl border border-slate-200/70 bg-white shadow-soft;
 }
 
+::selection {
+  background: var(--color-mint-200);
+  color: var(--color-mint-900);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ---------- keyframes ---------- */
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -64,9 +75,47 @@ body {
   }
 }
 
-html {
-  scroll-behavior: smooth;
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
 }
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 220;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes preloader-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes preloader-fade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ---------- utilities ---------- */
 
 .fade-in {
   animation: fade-in 0.2s ease-out;
@@ -88,6 +137,38 @@ html {
   animation: float 13s ease-in-out infinite reverse;
 }
 
+.marquee-move {
+  animation: marquee 26s linear infinite;
+}
+
+.marquee-track:hover .marquee-move {
+  animation-play-state: paused;
+}
+
+.underline-draw path {
+  stroke-dasharray: 220;
+  animation: draw 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.7s backwards;
+}
+
+.preloader-logo {
+  animation: preloader-pulse 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.preloader-out {
+  animation: preloader-fade 0.35s ease-out 0.55s both;
+}
+
+.noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- נגישות: פחות תנועה ---------- */
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -96,7 +177,11 @@ html {
   .hero-in,
   .float-slow,
   .float-slower,
-  .fade-in {
+  .fade-in,
+  .marquee-move,
+  .underline-draw path,
+  .preloader-logo,
+  .preloader-out {
     animation: none !important;
   }
 }

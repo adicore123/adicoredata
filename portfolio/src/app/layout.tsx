@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Rubik } from "next/font/google";
 import { Layers } from "lucide-react";
 import "./globals.css";
+import Cursor from "@/components/Cursor";
+import ScrollProgress from "@/components/ScrollProgress";
+import Preloader from "@/components/Preloader";
 
 const rubik = Rubik({ subsets: ["hebrew", "latin"], variable: "--font-rubik" });
 
@@ -23,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="he" dir="rtl">
       <body className={`${rubik.variable} min-h-dvh font-sans text-slate-900 antialiased`}>
+        <Preloader />
+        <ScrollProgress />
+        <Cursor />
         <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-app/80 backdrop-blur-xl">
           <div className="mx-auto flex w-full max-w-6xl items-center px-4 py-3 sm:px-6">
             <Link href="/portfolio" className="flex items-center gap-2.5">

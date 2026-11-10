@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowRight, CalendarDays, Eye, ExternalLink, HardDrive, Star, User } from "lucide-react";
+import { ArrowRight, CalendarDays, Eye, ExternalLink, FolderOpen, HardDrive, Star, User } from "lucide-react";
 import { store } from "@/lib/store";
 import { formatDate } from "@/lib/format";
+import { coverOf, isImage, isVideo } from "@/lib/types";
 import WorkGallery from "@/components/WorkGallery";
+import Reveal from "@/components/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +23,8 @@ export default async function WorkPage({ params }: Props) {
   const work = await store.find(id);
   if (!work || !work.published) notFound();
 
-  // מונה צפיות (בלי לחכות — fire and forget)
   store.incrementViews(id).catch(() => {});
+  const cover = coverOf(work);
 
   return (
     <div className="space-y-8">
@@ -33,76 +35,109 @@ export default async function WorkPage({ params }: Props) {
         <ArrowRight className="size-4" /> חזרה לכל העבודות
       </Link>
 
-      <header className="card relative overflow-hidden p-6 sm:p-8">
-        <span
-          aria-hidden
-          className="absolute inset-x-6 top-0 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent"
-        />
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-black sm:text-3xl">{work.title}</h1>
-            {work.category && (
-              <span className="mt-2 inline-block rounded-full bg-mint-50 px-3 py-1 text-xs font-bold text-mint-700">
-                {work.category}
-              </span>
-            )}
+      {/* באנר כרינה ברוחב מלא */}
+      <Reveal variant="scale">
+        <section className="noise relative aspect-[21/9] max-h-72 overflow-hidden rounded-[2rem] bg-mint-900 sm:max-h-80">
+          {cover ? (
+            isVideo(cover) ? (
+              // eslint-disable-next-line jsx-a11y/media-has-caption
+              <video src={`/api/files/${cover.id}`} autoPlay muted loop playsInline className="size-full object-cover" />
+            ) : isImage(cover) ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={`/api/files/${cover.id}`} alt={work.title} className="size-full object-cover" />
+            ) : null
+          ) : null}
+          <span className="absolute inset-0 bg-gradient-to-t from-mint-900/90 via-mint-900/30 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
+            <h1 className="text-2xl font-black text-white drop-shadow-sm sm:text-4xl">{work.title}</h1>
           </div>
           {work.featured && (
-            <span className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600">
+            <span className="absolute end-4 top-4 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-amber-600 shadow-soft">
               <Star className="size-3.5 fill-current" /> עבודה מודגשת
             </span>
           )}
-        </div>
+        </section>
+      </Reveal>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-          {work.client && (
-            <span className="flex items-center gap-1.5">
-              <User className="size-4 text-mint-500" /> {work.client}
-            </span>
-          )}
-          {work.year && (
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="size-4 text-mint-500" /> {work.year}
-            </span>
-          )}
-          <span className="flex items-center gap-1.5">
-            <HardDrive className="size-4 text-mint-500" /> {work.media.length} קבצים
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Eye className="size-4 text-mint-500" /> {work.views + 1} צפיות
-          </span>
-          <span className="text-xs text-slate-400">נוסף ב-{formatDate(work.createdAt)}</span>
-        </div>
-
-        {work.description && (
-          <p className="mt-5 max-w-3xl text-base/relaxed whitespace-pre-wrap text-slate-600">
-            {work.description}
-          </p>
-        )}
-
-        {work.tags.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {work.tags.map((t) => (
-              <span key={t} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                {t}
+      {/* מטא דביק + תוכן */}
+      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-6">
+          <Reveal className="card relative overflow-hidden p-6 sm:p-8">
+            <span aria-hidden className="absolute inset-x-6 top-0 h-px bg-gradient-to-l from-transparent via-mint-400/60 to-transparent" />
+            {work.category && (
+              <span className="inline-block rounded-full bg-mint-50 px-3 py-1 text-xs font-bold text-mint-700">
+                {work.category}
               </span>
-            ))}
-          </div>
-        )}
+            )}
+            {work.description && (
+              <p className="mt-4 text-base/relaxed whitespace-pre-wrap text-slate-600 sm:text-lg/relaxed">
+                {work.description}
+              </p>
+            )}
+            {work.link && (
+              <a
+                href={work.link}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-mint-600 px-6 py-3.5 text-sm font-bold text-white shadow-lift transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105"
+              >
+                <ExternalLink className="size-4" /> לצפייה חיה בפרויקט
+              </a>
+            )}
+          </Reveal>
 
-        {work.link && (
-          <a
-            href={work.link}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-mint-600 px-6 py-3.5 text-sm font-bold text-white shadow-lift transition hover:bg-mint-700"
-          >
-            <ExternalLink className="size-4" /> לצפייה חיה בפרויקט
-          </a>
-        )}
-      </header>
+          <WorkGallery work={work} />
+        </div>
 
-      <WorkGallery work={work} />
+        {/* עמודת מטא דביקה */}
+        <Reveal variant="blur" delay={120}>
+          <aside className="card sticky top-20 p-5">
+            <h2 className="text-sm font-black text-slate-400">פרטי הפרויקט</h2>
+            <ul className="mt-4 space-y-3.5 text-sm">
+              {work.client && (
+                <li className="flex items-center gap-2.5 text-slate-600">
+                  <User className="size-4 shrink-0 text-mint-500" />
+                  <span className="font-semibold">{work.client}</span>
+                </li>
+              )}
+              {work.year && (
+                <li className="flex items-center gap-2.5 text-slate-600">
+                  <CalendarDays className="size-4 shrink-0 text-mint-500" />
+                  <span className="font-semibold">{work.year}</span>
+                </li>
+              )}
+              <li className="flex items-center gap-2.5 text-slate-600">
+                <FolderOpen className="size-4 shrink-0 text-mint-500" />
+                <span className="font-semibold">{work.media.length} קבצים</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-slate-600">
+                <HardDrive className="size-4 shrink-0 text-mint-500" />
+                <span className="font-semibold">
+                  {Math.round(work.media.reduce((s, m) => s + m.size, 0) / 1024)} KB סה״כ
+                </span>
+              </li>
+              <li className="flex items-center gap-2.5 text-slate-600">
+                <Eye className="size-4 shrink-0 text-mint-500" />
+                <span className="font-semibold">{work.views + 1} צפיות</span>
+              </li>
+            </ul>
+            {work.tags.length > 0 && (
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="flex flex-wrap gap-1.5">
+                  {work.tags.map((t) => (
+                    <span key={t} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-400">
+              נוסף ב-{formatDate(work.createdAt)}
+            </p>
+          </aside>
+        </Reveal>
+      </div>
     </div>
   );
 }

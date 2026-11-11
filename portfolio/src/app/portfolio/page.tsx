@@ -6,6 +6,7 @@ import CountUp from "@/components/CountUp";
 import Parallax from "@/components/Parallax";
 import Magnetic from "@/components/Magnetic";
 import Hero3DLoader from "@/components/Hero3DLoader";
+import GyroChip from "@/components/GyroChip";
 
 export const dynamic = "force-dynamic";
 
@@ -132,6 +133,7 @@ export default async function PortfolioHome() {
                   ))}
                 </div>
               )}
+              <GyroChip />
             </div>
           </div>
 

@@ -12,22 +12,25 @@ export default function Tilt3D({ children, className = "" }: { children: ReactNo
   const raf = useRef(0);
 
   const onMove = (e: React.PointerEvent) => {
-    // זיהוי יכולת פעם אחת בתנועה הראשונה — דסקטופ בלבד, בלי reduced-motion
+    // זיהוי יכולת פעם אחת בתנועה הראשונה — הטיה לדסקטופ, זוהר לכולם (כולל מגע)
     if (enabled.current === null) {
       enabled.current =
         window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     }
     const el = ref.current;
-    if (!el || !enabled.current) return;
+    if (!el) return;
     cancelAnimationFrame(raf.current);
     const rect = el.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
     raf.current = requestAnimationFrame(() => {
-      const rotateY = (px - 0.5) * 9;
-      const rotateX = (0.5 - py) * 9;
-      el.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      if (enabled.current) {
+        const rotateY = (px - 0.5) * 9;
+        const rotateX = (0.5 - py) * 9;
+        el.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      }
+      // זוהר עוקב — גם באצבע במובייל
       el.style.setProperty("--glare-x", `${px * 100}%`);
       el.style.setProperty("--glare-y", `${py * 100}%`);
       el.style.setProperty("--glare-opacity", "1");

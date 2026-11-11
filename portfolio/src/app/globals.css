@@ -5,7 +5,7 @@
 }
 
 @theme {
-  --color-app: #f5f8f7;
+  --color-app: #f8fafc;
 
   --color-mint-50: #effaf5;
   --color-mint-100: #d7f3e7;
@@ -24,8 +24,8 @@
 
 body {
   background:
-    radial-gradient(60rem 30rem at 85% -12%, rgb(69 194 151 / 0.12), transparent 60%),
-    radial-gradient(50rem 26rem at 0% 0%, rgb(126 214 183 / 0.1), transparent 55%),
+    radial-gradient(60rem 30rem at 85% -12%, rgb(110 231 183 / 0.09), transparent 60%),
+    radial-gradient(50rem 26rem at 0% 0%, rgb(167 243 208 / 0.08), transparent 55%),
     var(--color-app);
   background-attachment: fixed;
 }
@@ -197,6 +197,20 @@ html {
   pointer-events: none;
   opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ההיירו — זכוכית פנינה-מנטה: גרדיאנט לוקס + גבול זכוכית פנימי */
+.hero-glass {
+  background: linear-gradient(135deg, #f0fdf9 0%, #dcfce7 45%, #ccfbf1 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    0 1px 2px rgb(6 78 59 / 0.04),
+    0 24px 64px -28px rgb(16 185 129 / 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.hero-glass.noise::after {
+  opacity: 0.03;
 }
 
 /* ---------- נגישות: פחות תנועה ---------- */

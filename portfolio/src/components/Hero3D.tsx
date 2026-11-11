@@ -2,112 +2,191 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-/** עצם הזכוכית-מנטה — מסתובב, מרחף, ונוטה לעבר הסמן */
-function GlassGem({ pointer }: { pointer: React.RefObject<{ x: number; y: number }> }) {
-  const mesh = useRef<THREE.Mesh>(null);
-
-  useFrame((state, delta) => {
-    const m = mesh.current;
-    if (!m) return;
-    m.rotation.y += delta * 0.18;
-    m.rotation.x += delta * 0.07;
-    // הטיה לעבר הסמן — תנועה חלקה ולא קפוצה
-    const p = pointer.current ?? { x: 0, y: 0 };
-    m.rotation.z += (p.x * 0.35 - m.rotation.z) * 0.045;
-    m.position.y += (p.y * 0.3 - m.position.y + 0.1) * 0.045;
-  });
-
-  return (
-    <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.9}>
-      <mesh ref={mesh}>
-        <icosahedronGeometry args={[1.15, 1]} />
-        <meshPhysicalMaterial
-          transmission={0.92}
-          thickness={1.4}
-          roughness={0.12}
-          color="#b0e7d2"
-          attenuationColor="#1fa87e"
-          attenuationDistance={2.4}
-          clearcoat={1}
-          clearcoatRoughness={0.1}
-          envMapIntensity={1.2}
-        />
-      </mesh>
-      {/* טבעת מסתובבת עדינה סביב העצם */}
-      <mesh rotation={[Math.PI / 2.4, 0, 0]}>
-        <torusGeometry args={[1.85, 0.018, 12, 90]} />
-        <meshBasicMaterial color="#7ed6b7" transparent opacity={0.5} />
-      </mesh>
-    </Float>
-  );
-}
-
-/** שדה חלקיקים פרוצדורלי — מאות נקודות מנטה שרועדות סביב העצם */
-function Particles({ count = 320 }: { count?: number }) {
-  const points = useRef<THREE.Points>(null);
-
-  const geometry = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const r = 1.9 + Math.random() * 2.4;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 4.4;
-      positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return geo;
-  }, [count]);
-
-  useFrame((state) => {
-    if (points.current) {
-      points.current.rotation.y = state.clock.elapsedTime * 0.03;
-      points.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.08;
-    }
-  });
-
-  return (
-    <points ref={points} geometry={geometry}>
-      <pointsMaterial size={0.028} color="#7ed6b7" transparent opacity={0.55} sizeAttenuation />
-    </points>
-  );
-}
-
-/** מצלמה שמתקרבת כשגוללים — dolly עדין קשור ל-scrollY */
-function ScrollDolly() {
-  const { camera } = useThree();
-  useFrame(() => {
-    const targetZ = 4.6 + Math.min(window.scrollY, 700) * 0.0016;
-    camera.position.z += (targetZ - camera.position.z) * 0.05;
-  });
+/** סביבת סטודיו פרוצדורלית — RoomEnvironment + PMREM, אפס הורדות */
+function StudioEnvironment() {
+  const { gl, scene } = useThree();
+  useMemo(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04);
+    scene.environment = env.texture;
+    return () => {
+      env.dispose();
+      pmrem.dispose();
+      scene.environment = null;
+    };
+  }, [gl, scene]);
   return null;
 }
 
-/** עוטף את סצנת ה-3D בבדיקות תמיכה ונראות */
+interface Pointer {
+  x: number;
+  y: number;
+}
+
+/** הפסל הקינטי — 4 שכבות: ליבת אמרלד, קליפת זכוכית, טבעות ג'ירוסקופיות, מיקרו-לוויינים */
+function Sculpture({ pointer, mobile }: { pointer: React.RefObject<Pointer>; mobile: boolean }) {
+  const group = useRef<THREE.Group>(null);
+  const core = useRef<THREE.Mesh>(null);
+  const shell = useRef<THREE.Mesh>(null);
+  const ringA = useRef<THREE.Mesh>(null);
+  const ringB = useRef<THREE.Mesh>(null);
+  const current = useRef({ x: 0, y: 0 });
+
+  // לוויינים — מיקומי מסלול + מהירויות bobbing אינדיבידואליות
+  const satelliteCount = mobile ? 6 : 9;
+  const satellites = useMemo(
+    () =>
+      Array.from({ length: satelliteCount }, (_, i) => {
+        const angle = (i / satelliteCount) * Math.PI * 2;
+        const radius = 2.05 + (i % 3) * 0.28;
+        return {
+          angle,
+          radius,
+          y: ((i % 4) - 1.5) * 0.55,
+          speed: 0.6 + (i % 5) * 0.22,
+          offset: i * 1.3,
+          isSphere: i % 2 === 0,
+        };
+      }),
+    [satelliteCount],
+  );
+  const satRefs = useRef<(THREE.Mesh | null)[]>([]);
+
+  useFrame((state, delta) => {
+    const t = state.clock.elapsedTime;
+
+    // פרלקסה מרוסנת — lerp ×0.05 לעבר הסמן
+    const target = pointer.current ?? { x: 0, y: 0 };
+    current.current.x += (target.x - current.current.x) * 0.05;
+    current.current.y += (target.y - current.current.y) * 0.05;
+    const { x: mx, y: my } = current.current;
+
+    // גלילה → הטיה וסקייל חינניים
+    const scroll = Math.min(window.scrollY, 800);
+
+    if (group.current) {
+      group.current.rotation.y = mx * 0.35;
+      group.current.rotation.x = -my * 0.22 + scroll * 0.00045;
+      const s = (mobile ? 0.72 : 1) * (1 - scroll * 0.00018);
+      group.current.scale.setScalar(Math.max(0.62, s));
+    }
+    // ליבה — סיבוב איטי עדין
+    if (core.current) {
+      core.current.rotation.y += delta * 0.16;
+      core.current.rotation.x += delta * 0.06;
+    }
+    // קליפת הזכוכית — נגד כיוון, עדין יותר
+    if (shell.current) {
+      shell.current.rotation.y -= delta * 0.07;
+      shell.current.rotation.z += delta * 0.03;
+    }
+    // טבעות ג'ירוסקופיות — צירים שונים, מהירויות שונות
+    if (ringA.current) {
+      ringA.current.rotation.z += delta * 0.28;
+      ringA.current.rotation.x = Math.PI / 3 + mx * 0.12;
+    }
+    if (ringB.current) {
+      ringB.current.rotation.y -= delta * 0.36;
+      ringB.current.rotation.x = -Math.PI / 4 - mx * 0.1;
+    }
+    // לוויינים — bobbing סינוסי אישי
+    satellites.forEach((sat, i) => {
+      const m = satRefs.current[i];
+      if (!m) return;
+      const orbit = sat.angle + t * 0.1;
+      m.position.set(Math.cos(orbit) * sat.radius, sat.y + Math.sin(t * sat.speed + sat.offset) * 0.22, Math.sin(orbit) * sat.radius * 0.55);
+      m.rotation.y = t * 0.8 + sat.offset;
+    });
+  });
+
+  return (
+    <group ref={group}>
+      {/* A — הליבה האמרלד הזוהרת */}
+      <mesh ref={core}>
+        <icosahedronGeometry args={[1.15, 0]} />
+        <meshPhysicalMaterial
+          color="#059669"
+          emissive="#047857"
+          emissiveIntensity={0.25}
+          metalness={0.2}
+          roughness={0.15}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
+        />
+      </mesh>
+
+      {/* B — קליפת הזכוכית האמיתית: שבירה + אירידסנציה */}
+      <mesh ref={shell}>
+        <icosahedronGeometry args={[1.65, 1]} />
+        <meshPhysicalMaterial
+          color="#ffffff"
+          transmission={0.92}
+          transparent
+          opacity={1}
+          roughness={0.08}
+          ior={1.45}
+          thickness={2.0}
+          iridescence={0.6}
+          iridescenceIOR={1.3}
+          envMapIntensity={1.8}
+        />
+      </mesh>
+
+      {/* C — טבעות ג'ירוסקופיות ממתכת שמפנייה */}
+      <mesh ref={ringA} rotation={[Math.PI / 3, 0, 0]}>
+        <torusGeometry args={[2.4, 0.035, 32, 200]} />
+        <meshPhysicalMaterial color="#f8fafc" metalness={0.85} roughness={0.2} clearcoat={1.0} envMapIntensity={1.4} />
+      </mesh>
+      <mesh ref={ringB} rotation={[-Math.PI / 4, 0, 0]}>
+        <torusGeometry args={[2.4, 0.035, 32, 200]} />
+        <meshPhysicalMaterial color="#f8fafc" metalness={0.85} roughness={0.2} clearcoat={1.0} envMapIntensity={1.4} />
+      </mesh>
+
+      {/* D — מיקרו-לוויינים */}
+      {satellites.map((sat, i) => (
+        <mesh
+          key={i}
+          ref={(el) => {
+            satRefs.current[i] = el;
+          }}
+        >
+          {sat.isSphere ? <sphereGeometry args={[0.08, 32, 32]} /> : <octahedronGeometry args={[0.1, 0]} />}
+          <meshPhysicalMaterial
+            color={sat.isSphere ? "#a7f3d0" : "#34d399"}
+            metalness={0.4}
+            roughness={0.18}
+            clearcoat={0.8}
+            envMapIntensity={1.2}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** סצנת ה-3D — ריאליזם פוטוגרפי: ACES + RoomEnvironment + יחס פיקסלים עד 2 */
 export default function Hero3D() {
   const [visible, setVisible] = useState(true);
-  const pointer = useRef({ x: 0, y: 0 });
+  const pointer = useRef<Pointer>({ x: 0, y: 0 });
   const wrapRef = useRef<HTMLDivElement>(null);
-  const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches, []);
+  const [mobile, setMobile] = useState(false);
 
   useMemo(() => {
     if (typeof window === "undefined") return;
-    // תנועת סמן גלובלית — העצם נוטה גם כשהסמן לא מעליו
+    setMobile(window.matchMedia("(pointer: coarse)").matches);
+
+    // סמן גלובלי — הפסל נוטה גם כשהסמן מחוץ לקנבס
     const onMove = (e: PointerEvent) => {
       pointer.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
       pointer.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
     };
     window.addEventListener("pointermove", onMove, { passive: true });
 
-    // רינדור חסכוני — עוצרים כשה-Hero מחוץ למסך
-    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
-      threshold: 0.02,
-    });
+    // רינדור חסכוני — עוצרים כשהקנבס מחוץ למסך
+    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.02 });
     if (wrapRef.current) io.observe(wrapRef.current);
     return () => {
       window.removeEventListener("pointermove", onMove);
@@ -116,25 +195,25 @@ export default function Hero3D() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="absolute inset-0" aria-hidden>
+    <div ref={wrapRef} className="h-full w-full" aria-hidden>
       {visible && (
         <Canvas
-          dpr={[1, isMobile ? 1.2 : 1.75]}
-          camera={{ position: [0, 0, 4.6], fov: 42 }}
-          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-          className="!absolute inset-0"
+          dpr={[1, 2]}
+          camera={{ position: [0, 0, 5.4], fov: 42 }}
+          gl={{
+            antialias: true,
+            alpha: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.15,
+            powerPreference: "high-performance",
+          }}
         >
-          <ambientLight intensity={0.35} />
-          <directionalLight position={[4, 5, 3]} intensity={0.7} color="#d7f3e7" />
-          <directionalLight position={[-5, -2, -3]} intensity={0.35} color="#1fa87e" />
-          <GlassGem pointer={pointer} />
-          <Particles count={isMobile ? 130 : 320} />
-          <ScrollDolly />
-          <Environment resolution={128}>
-            <Lightformer intensity={1.6} position={[0, 3, 4]} scale={[6, 1.5, 1]} color="#ffffff" />
-            <Lightformer intensity={0.9} position={[-4, 0, 2]} scale={[2, 4, 1]} color="#b0e7d2" />
-            <Lightformer intensity={0.7} position={[4, -1, 2]} scale={[2, 3, 1]} color="#45c297" />
-          </Environment>
+          <ambientLight intensity={0.3} />
+          {/* rim-light אמרלד */}
+          <directionalLight position={[-5, 2, -3]} intensity={0.5} color="#34d399" />
+          <directionalLight position={[4, 4, 4]} intensity={0.55} color="#ffffff" />
+          <StudioEnvironment />
+          <Sculpture pointer={pointer} mobile={mobile} />
         </Canvas>
       )}
     </div>

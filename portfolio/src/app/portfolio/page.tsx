@@ -5,6 +5,7 @@ import Marquee from "@/components/Marquee";
 import CountUp from "@/components/CountUp";
 import Parallax from "@/components/Parallax";
 import Magnetic from "@/components/Magnetic";
+import Hero3DLoader from "@/components/Hero3DLoader";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,8 @@ export default async function PortfolioHome() {
     <div className="space-y-0">
       {/* Hero — טיפוגרפיה קינטית, צורות מרחפות, טקסטורת רעש וקו מצויר שמצטייר */}
       <section className="noise relative overflow-hidden rounded-[2rem] bg-gradient-to-bl from-mint-800 via-mint-600 to-mint-400 px-6 py-14 text-white sm:px-12 sm:py-20">
+        {/* סצנת 3D — זכוכית-מנטה עם חלקיקים */}
+        <Hero3DLoader />
         <Parallax speed={0.22} className="!absolute inset-0">
           <div
             aria-hidden

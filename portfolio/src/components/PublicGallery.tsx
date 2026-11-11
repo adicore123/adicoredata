@@ -7,6 +7,7 @@ import type { Work } from "@/lib/types";
 import { coverOf, isVideo } from "@/lib/types";
 import MediaLightbox from "@/components/MediaLightbox";
 import Reveal from "@/components/Reveal";
+import Tilt3D from "@/components/Tilt3D";
 
 /** תיק העבודות — פס Spotlight כהה, Bento-grid אסימטרי, וידאו בריחוף וחשיפה בגלילה */
 export default function PublicGallery({ works }: { works: Work[] }) {
@@ -116,13 +117,14 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                 delay={Math.min(idx, 6) * 70}
                 className={span}
               >
-                <article
-                  onMouseEnter={(e) => playHover(e.currentTarget, true)}
-                  onMouseLeave={(e) => playHover(e.currentTarget, false)}
-                  className={`group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-mint-800/40 shadow-soft transition-all duration-500 hover:-translate-y-1.5 hover:border-mint-300/50 hover:shadow-[0_24px_60px_-20px_rgba(69,194,151,0.45)] ${
-                    big ? "aspect-[16/10] lg:aspect-auto" : "aspect-[4/3]"
-                  } lg:h-full`}
-                >
+                <Tilt3D className="h-full">
+                  <article
+                    onMouseEnter={(e) => playHover(e.currentTarget, true)}
+                    onMouseLeave={(e) => playHover(e.currentTarget, false)}
+                    className={`group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-mint-800/40 shadow-soft transition-all duration-500 hover:border-mint-300/50 hover:shadow-[0_24px_60px_-20px_rgba(69,194,151,0.45)] ${
+                      big ? "aspect-[16/10] lg:aspect-auto" : "aspect-[4/3]"
+                    } lg:h-full`}
+                  >
                   <Link
                     href={`/portfolio/work/${work.id}`}
                     className="absolute inset-0"
@@ -197,7 +199,8 @@ export default function PublicGallery({ works }: { works: Work[] }) {
                       תצוגה מקדימה ({work.media.length})
                     </button>
                   )}
-                </article>
+                  </article>
+                </Tilt3D>
               </Reveal>
             );
           })}

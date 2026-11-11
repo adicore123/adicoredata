@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="grid min-h-[60vh] place-items-center text-center">
+    <div className="mx-auto grid min-h-[60vh] w-full max-w-6xl place-items-center px-4 pt-8 text-center sm:px-6">
       <div>
         <p className="text-5xl font-black text-mint-500">404</p>
         <h1 className="mt-3 text-xl font-bold">העמוד לא נמצא</h1>

@@ -9,8 +9,16 @@ export const metadata: Metadata = { title: "ניהול" };
 
 export default async function AdminPage() {
   if (!(await isAdmin())) {
-    return <AdminLogin />;
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6">
+        <AdminLogin />
+      </div>
+    );
   }
   const [works, categories] = await Promise.all([store.listAll(), store.categories()]);
-  return <AdminDashboard initialWorks={works} categories={categories} />;
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6">
+      <AdminDashboard initialWorks={works} categories={categories} />
+    </div>
+  );
 }

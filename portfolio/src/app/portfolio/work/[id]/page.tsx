@@ -27,7 +27,7 @@ export default async function WorkPage({ params }: Props) {
   const cover = coverOf(work);
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pt-8 sm:px-6">
       <Link
         href="/portfolio#works"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-mint-700 transition hover:text-mint-900"

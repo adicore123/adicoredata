@@ -36,8 +36,8 @@ export default async function PortfolioHome() {
 
   return (
     <div className="space-y-0">
-      {/* Hero — זכוכית פנינה: טקסט 55% ימין, במת פסל 3D 45% שמאל */}
-      <section className="hero-glass noise relative overflow-hidden rounded-[2rem] px-6 py-14 sm:px-12 sm:py-20">
+      {/* Hero — במחשב: מסך מלא, קצה לקצה; במובייל: כרטיס מעוגל */}
+      <section className="hero-glass noise relative mx-4 mt-2 overflow-hidden rounded-[2rem] px-6 py-14 sm:px-10 lg:mx-0 lg:mt-0 lg:rounded-none lg:px-20 lg:py-0 xl:px-28">
         <Parallax speed={0.18} className="!absolute inset-0">
           <div aria-hidden className="float-slow pointer-events-none absolute -start-20 -top-24 size-72 rounded-full bg-emerald-200/30 blur-3xl" />
         </Parallax>
@@ -45,7 +45,7 @@ export default async function PortfolioHome() {
           <div aria-hidden className="float-slower pointer-events-none absolute -bottom-32 -end-12 size-80 rounded-full bg-teal-100/50 blur-3xl" />
         </Parallax>
 
-        <div className="relative grid items-center gap-10 lg:grid-cols-[55%_45%]">
+        <div className="relative grid items-center gap-10 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[55%_45%]">
           {/* טור הטקסט — נקי מהפסל */}
           <div className="min-w-0">
             <p
@@ -137,23 +137,23 @@ export default async function PortfolioHome() {
             </div>
           </div>
 
-          {/* במת הפסל — 45% ייעודיים */}
-          <div className="relative h-[300px] sm:h-[380px] lg:h-[480px]">
-            <div className="absolute inset-0 lg:static lg:h-full lg:w-full">
-              <Hero3DLoader />
-            </div>
+          {/* במת הפסל — 45% ייעודיים, במחשב בכל גובה המסך */}
+          <div className="relative h-[300px] sm:h-[380px] lg:h-[calc(100dvh-3.5rem)]">
+            <Hero3DLoader />
           </div>
         </div>
       </section>
 
-      {/* סרט מילות שירות */}
-      <div className="mt-6 rounded-[2rem]">
-        <Marquee />
-      </div>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+        {/* סרט מילות שירות */}
+        <div className="mt-6 rounded-[2rem]">
+          <Marquee />
+        </div>
 
-      {/* אזור העבודות */}
-      <div id="works" className="scroll-mt-24 pt-10">
-        <PublicGallery works={works} />
+        {/* אזור העבודות */}
+        <div id="works" className="scroll-mt-24 pt-10">
+          <PublicGallery works={works} />
+        </div>
       </div>
     </div>
   );

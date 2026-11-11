@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ScrollProgress />
         <Cursor />
         <HeaderBar />
-        <main className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 sm:px-6">{children}</main>
+        <main className="w-full pb-24">{children}</main>
         <BackToTop />
         <footer className="border-t border-slate-200/60 py-8">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-1.5 px-4 text-center sm:px-6">

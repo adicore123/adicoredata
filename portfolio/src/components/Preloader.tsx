@@ -10,23 +10,21 @@ export default function Preloader() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (pathname === "/portfolio") {
-      sessionStorage.setItem("adicore:loaded", "1");
+    const loaded = sessionStorage.getItem("adicore:loaded");
+    sessionStorage.setItem("adicore:loaded", "1");
+    if (pathname === "/portfolio" || loaded || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShow(false);
       return;
     }
-    if (sessionStorage.getItem("adicore:loaded")) return;
     setShow(true);
-    const t = setTimeout(() => {
-      setShow(false);
-      sessionStorage.setItem("adicore:loaded", "1");
-    }, 900);
+    const t = setTimeout(() => setShow(false), 900);
     return () => clearTimeout(t);
   }, [pathname]);
 
   if (!show || pathname === "/portfolio") return null;
 
   return (
-    <div className="preloader-out fixed inset-0 z-[100] grid place-items-center bg-app">
+    <div aria-hidden className="preloader-out pointer-events-none fixed inset-0 z-[100] grid place-items-center bg-app motion-reduce:hidden">
       <span className="preloader-logo grid size-16 place-items-center rounded-3xl bg-gradient-to-br from-studio-400 to-studio-600 text-white shadow-lift">
         <Layers className="size-8" />
       </span>

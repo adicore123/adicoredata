@@ -37,10 +37,10 @@ export default function GyroChip() {
   return (
     <button
       onClick={enable}
-      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-white/70 px-3.5 py-1.5 text-[11px] font-bold text-emerald-700 shadow-soft backdrop-blur transition hover:bg-white"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-studio-200/80 bg-white/70 px-3.5 py-1.5 text-[11px] font-bold text-studio-700 shadow-soft backdrop-blur transition hover:bg-white"
     >
-      <Sparkles className="size-3 text-emerald-500" />
-      הפעלת תנועה תלת-מימדית 🎩
+      <Sparkles className="size-3 text-studio-500" />
+      הפעלת תנועה במכשיר
     </button>
   );
 }

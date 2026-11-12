@@ -19,7 +19,7 @@ export default function BackToTop() {
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       aria-label="חזרה לראש העמוד"
       title="חזרה לראש"
-      className={`fixed bottom-6 end-6 z-40 grid size-12 place-items-center rounded-full bg-mint-600 text-white shadow-lift transition-all duration-300 hover:scale-110 hover:bg-mint-700 ${
+      className={`fixed bottom-6 end-6 z-40 grid size-12 place-items-center rounded-full bg-studio-600 text-white shadow-lift transition-all duration-300 hover:scale-110 hover:bg-studio-700 ${
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >

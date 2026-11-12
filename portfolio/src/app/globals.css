@@ -2,10 +2,23 @@
 
 @theme inline {
   --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+  --font-copy: var(--font-assistant), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme {
-  --color-app: #f8fafc;
+  --color-app: #f8f7fc;
+  --color-ink: #191630;
+  --color-muted: #57536c;
+  --color-studio-50: #f0edff;
+  --color-studio-100: #e5dfff;
+  --color-studio-200: #d2c8ff;
+  --color-studio-300: #b5a7fb;
+  --color-studio-400: #8e79f5;
+  --color-studio-500: #7259e5;
+  --color-studio-600: #5c42cb;
+  --color-studio-700: #4931ac;
+  --color-studio-800: #392681;
+  --color-studio-900: #271b56;
 
   --color-mint-50: #effaf5;
   --color-mint-100: #d7f3e7;
@@ -18,14 +31,13 @@
   --color-mint-800: #0b5844;
   --color-mint-900: #0a4838;
 
-  --shadow-soft: 0 1px 2px rgb(11 88 68 / 0.04), 0 12px 32px -16px rgb(13 138 102 / 0.18);
-  --shadow-lift: 0 2px 6px rgb(11 88 68 / 0.05), 0 20px 48px -20px rgb(13 138 102 / 0.3);
+  --shadow-soft: 0 1px 2px rgb(39 27 86 / 0.04), 0 12px 32px -16px rgb(57 38 129 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(39 27 86 / 0.05), 0 20px 48px -20px rgb(57 38 129 / 0.3);
 }
 
 body {
   background:
-    radial-gradient(60rem 30rem at 85% -12%, rgb(110 231 183 / 0.09), transparent 60%),
-    radial-gradient(50rem 26rem at 0% 0%, rgb(167 243 208 / 0.08), transparent 55%),
+    radial-gradient(60rem 30rem at 85% -12%, rgb(210 200 255 / 0.25), transparent 65%),
     var(--color-app);
   background-attachment: fixed;
 }
@@ -35,8 +47,8 @@ body {
 }
 
 ::selection {
-  background: var(--color-mint-200);
-  color: var(--color-mint-900);
+  background: var(--color-studio-200);
+  color: var(--color-studio-900);
 }
 
 html {
@@ -80,7 +92,7 @@ html {
     transform: translateX(0);
   }
   to {
-    transform: translateX(50%);
+    transform: translateX(25%);
   }
 }
 
@@ -197,20 +209,6 @@ html {
   pointer-events: none;
   opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ההיירו — זכוכית פנינה-מנטה: גרדיאנט לוקס + גבול זכוכית פנימי */
-.hero-glass {
-  background: linear-gradient(135deg, #f0fdf9 0%, #dcfce7 45%, #ccfbf1 100%);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.4),
-    0 1px 2px rgb(6 78 59 / 0.04),
-    0 24px 64px -28px rgb(16 185 129 / 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-}
-
-.hero-glass.noise::after {
-  opacity: 0.03;
 }
 
 /* ---------- נגישות: פחות תנועה ---------- */

@@ -1,160 +1,93 @@
-import { Boxes, Code2, Cpu, MoveLeft, Sparkles } from "lucide-react";
+import { Code2, LayoutTemplate, ListChecks, MoveLeft, Rocket } from "lucide-react";
 import { store } from "@/lib/store";
 import PublicGallery from "@/components/PublicGallery";
 import Marquee from "@/components/Marquee";
-import CountUp from "@/components/CountUp";
-import Parallax from "@/components/Parallax";
 import Magnetic from "@/components/Magnetic";
 import Hero3DLoader from "@/components/Hero3DLoader";
 import GyroChip from "@/components/GyroChip";
+import Reveal from "@/components/Reveal";
+import { WhatsAppIcon } from "@/components/WhatsAppShare";
+import styles from "./studio.module.css";
 
 export const dynamic = "force-dynamic";
-
-/** מילה בודדת בכותרת — עולה מתוך מסכה */
-function Word({ children, delay }: { children: string; delay: number }) {
-  return (
-    <span className="word-mask">
-      <span className="word-up" style={{ animationDelay: `${delay}ms` }}>
-        {children}
-      </span>
-    </span>
-  );
-}
-
-/** תגי יכולת — כשהמספרים עוד נמוכים, מציגים סטטוס ולא ספירה */
-const CAPABILITIES = [
-  { icon: Code2, label: "פיתוח Full-Stack" },
-  { icon: Cpu, label: "מערכות CRM ואוטומציה" },
-  { icon: Boxes, label: "חוויות 3D & UI/UX" },
+const processSteps = [
+  { icon: ListChecks, title: "אפיון", text: "מגדירים את הקהל, היעדים והפעולות שהמוצר צריך לאפשר." },
+  { icon: LayoutTemplate, title: "עיצוב", text: "בונים אבטיפוס בעברית ובודקים את חוויית השימוש במובייל ובמחשב." },
+  { icon: Code2, title: "פיתוח", text: "מחברים את הממשק לנתונים ובודקים ביצועים, נגישות ותרחישי שימוש." },
+  { icon: Rocket, title: "השקה", text: "מעלים לאוויר ומוודאים שהתהליכים המרכזיים עובדים בסביבת הייצור." },
 ];
 
 export default async function PortfolioHome() {
   const works = await store.listPublished();
-  const categories = new Set(works.map((w) => w.category).filter(Boolean));
-  const mediaCount = works.reduce((sum, w) => sum + w.media.length, 0);
-  const established = works.length >= 3; // מעל 3 עבודות — מציגים מונים חיים
+  const contactNumber = process.env.PORTFOLIO_WHATSAPP_NUMBER?.trim();
+  const contactUrl = contactNumber && /^[1-9]\d{7,14}$/.test(contactNumber)
+    ? `https://wa.me/${contactNumber}`
+    : null;
 
   return (
-    <div className="space-y-0">
-      {/* Hero — במחשב: מסך מלא, קצה לקצה; במובייל: כרטיס מעוגל */}
-      <section className="hero-glass noise relative mx-4 mt-2 overflow-hidden rounded-[2rem] px-6 py-14 sm:px-10 lg:mx-0 lg:mt-0 lg:rounded-none lg:px-20 lg:py-0 xl:px-28">
-        <Parallax speed={0.18} className="!absolute inset-0">
-          <div aria-hidden className="float-slow pointer-events-none absolute -start-20 -top-24 size-72 rounded-full bg-emerald-200/30 blur-3xl" />
-        </Parallax>
-        <Parallax speed={-0.1} className="!absolute inset-0">
-          <div aria-hidden className="float-slower pointer-events-none absolute -bottom-32 -end-12 size-80 rounded-full bg-teal-100/50 blur-3xl" />
-        </Parallax>
-
-        <div className="relative grid items-center gap-10 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[55%_45%]">
-          {/* טור הטקסט — נקי מהפסל */}
-          <div className="min-w-0">
-            <p
-              className="hero-in flex w-fit items-center gap-2 rounded-full border border-emerald-200/80 bg-white/70 px-4 py-1.5 text-sm font-bold text-emerald-700 shadow-soft backdrop-blur"
-              style={{ animationDelay: "0ms" }}
-            >
-              <Sparkles className="size-4 text-emerald-500" />
-              AdiCore — פתרונות דיגיטליים
-            </p>
-
-            <Parallax speed={-0.04}>
-              <h1 className="mt-6 max-w-xl text-[clamp(2.3rem,6vw,4.2rem)] font-black leading-[1.1] tracking-tight text-emerald-950">
-                <Word delay={120}>עבודות</Word> <Word delay={200}>שמדברות</Word>{" "}
-                <span className="word-mask">
-                  <span className="word-up relative inline-block text-emerald-600" style={{ animationDelay: "280ms" }}>
-                    בעד עצמן
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 200 12"
-                      preserveAspectRatio="none"
-                      className="underline-draw absolute -bottom-2 inset-x-0 h-3 w-full text-emerald-400/80"
-                    >
-                      <path
-                        d="M2 9 C 60 -2, 140 -2, 198 8"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </span>
-                </span>
-              </h1>
-            </Parallax>
-
-            <p
-              className="hero-in mt-5 max-w-md text-base/relaxed text-emerald-900/60 sm:text-lg/relaxed"
-              style={{ animationDelay: "180ms" }}
-            >
-              אוסף נבחר של אתרים, מערכות וחוויות דיגיטליות שתוכננו, עוצבו ונבנו בקפידה —
-              כל פרויקט עם הסיפור, התמונות וההדגמות שלו.
-            </p>
-
-            {/* Pills — יכולות כשמתחילים, מונים חיים כשיש נפח */}
-            <div className="hero-in mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "270ms" }}>
-              <Magnetic>
-                <a
-                  href="#works"
-                  className="group inline-flex items-center gap-2.5 rounded-2xl bg-emerald-700 px-7 py-4 text-sm font-bold text-white shadow-[0_10px_36px_-10px_rgba(4,120,87,0.55)] transition-all duration-300 hover:bg-emerald-800 hover:shadow-[0_14px_44px_-10px_rgba(4,120,87,0.7)] active:scale-100"
-                >
-                  לצפייה בעבודות
-                  <MoveLeft className="size-4 transition-transform duration-300 group-hover:-translate-x-1.5" />
-                </a>
-              </Magnetic>
-
-              {established ? (
-                <div className="flex flex-wrap gap-2">
-                  <span className="flex items-baseline gap-1.5 rounded-2xl border border-emerald-100 bg-white/80 px-4 py-3 text-sm font-bold text-emerald-900 shadow-soft backdrop-blur">
-                    <CountUp to={works.length} />
-                    <span className="font-medium text-emerald-700/70">פרויקטים</span>
-                  </span>
-                  {categories.size > 0 && (
-                    <span className="flex items-baseline gap-1.5 rounded-2xl border border-emerald-100 bg-white/80 px-4 py-3 text-sm font-bold text-emerald-900 shadow-soft backdrop-blur">
-                      <CountUp to={categories.size} duration={900} />
-                      <span className="font-medium text-emerald-700/70">קטגוריות</span>
-                    </span>
-                  )}
-                  {mediaCount > 0 && (
-                    <span className="hidden items-baseline gap-1.5 rounded-2xl border border-emerald-100 bg-white/80 px-4 py-3 text-sm font-bold text-emerald-900 shadow-soft backdrop-blur sm:flex">
-                      <CountUp to={mediaCount} duration={1300} />
-                      <span className="font-medium text-emerald-700/70">קבצי הדגמה</span>
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {CAPABILITIES.map(({ icon: Icon, label }) => (
-                    <span
-                      key={label}
-                      className="flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-white/75 px-3.5 py-2 text-xs font-bold text-emerald-800 shadow-soft backdrop-blur"
-                    >
-                      <Icon className="size-3.5 text-emerald-500" />
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <GyroChip />
-            </div>
+    <div className="text-ink">
+      <section className={styles.hero} aria-labelledby="portfolio-title">
+        <div className="hero-in min-w-0">
+          <p className={styles.eyebrow}>סטודיו לעיצוב ופיתוח דיגיטלי</p>
+          <h1 id="portfolio-title" className={styles.headline}>
+            עבודות שמדברות <span>בעד עצמן.</span>
+          </h1>
+          <p className="mt-6 max-w-[29rem] font-copy text-xl leading-[1.55] text-muted sm:text-2xl">
+            אתרים, מערכות וחוויות דיגיטליות שעיצבתי ובניתי. כאן אפשר לראות את הפרויקטים מקרוב.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <Magnetic>
+              <a
+                href="#works"
+                className={`group ${styles.primary}`}
+              >
+                לצפייה בעבודות
+                <MoveLeft aria-hidden className="size-4 motion-safe:transition-transform motion-safe:group-hover:-translate-x-1" />
+              </a>
+            </Magnetic>
+            {contactUrl && <a href={contactUrl} className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-studio-100 bg-white/80 px-4 font-bold text-studio-700 hover:border-studio-300">בוא נדבר על הפרויקט שלך <MoveLeft aria-hidden className="size-4" /></a>}
+            <GyroChip />
           </div>
+        </div>
 
-          {/* במת הפסל — 45% ייעודיים, במחשב בכל גובה המסך */}
-          <div className="relative h-[300px] sm:h-[380px] lg:h-[calc(100dvh-3.5rem)]">
+        <div className={styles.stage} aria-hidden>
+          <div className={styles.fallback}><span /><span /></div>
+          <div className={styles.artwork}>
             <Hero3DLoader />
           </div>
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        {/* סרט מילות שירות */}
-        <div className="mt-6 rounded-[2rem]">
-          <Marquee />
-        </div>
-
-        {/* אזור העבודות */}
-        <div id="works" className="scroll-mt-24 pt-10">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-8">
+        <Marquee />
+        <div id="works" className="scroll-mt-20 pt-14 sm:pt-20">
           <PublicGallery works={works} />
         </div>
+        <section id="process" aria-labelledby="process-title" className="mt-20 scroll-mt-24 sm:mt-28">
+          <h2 id="process-title" className="text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold tracking-[-0.045em]">איך אנחנו עובדים</h2>
+          <ol className={`${styles.process} mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4`}>
+            {processSteps.map(({ icon: Icon, title, text }, index) => (
+              <Reveal as="li" key={title} delay={index * 110} className="rounded-3xl border border-studio-100/80 bg-white/85 p-5 shadow-soft">
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg text-lg font-bold focus-visible:outline-2 focus-visible:outline-studio-600 [&::-webkit-details-marker]:hidden">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-studio-50 text-studio-700"><Icon aria-hidden className="size-4" /></span>
+                    <span className="grow">{title}</span>
+                    <span aria-hidden className="text-studio-600 group-open:hidden">+</span>
+                    <span aria-hidden className="hidden text-studio-600 group-open:inline">−</span>
+                  </summary>
+                  <p className="pt-4 font-copy text-lg leading-relaxed text-muted">{text}</p>
+                </details>
+              </Reveal>
+            ))}
+          </ol>
+        </section>
       </div>
+      {contactUrl && (
+        <a href={contactUrl} className="fixed bottom-5 start-4 z-30 inline-flex min-h-12 items-center gap-2 rounded-full border border-studio-200 bg-white/90 px-4 text-sm font-bold text-studio-800 shadow-lift backdrop-blur-xl hover:bg-studio-50">
+          <WhatsAppIcon className="size-5" />
+          לדבר בוואטסאפ
+        </a>
+      )}
     </div>
   );
 }

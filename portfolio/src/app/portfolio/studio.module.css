@@ -1,0 +1,185 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.22fr);
+  align-items: center;
+  gap: clamp(2rem, 4.1vw, 4rem);
+  max-width: 80rem;
+  margin-inline: auto;
+  padding: clamp(2rem, 4vw, 4.25rem) clamp(1rem, 3.5vw, 3rem);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: clamp(0.85rem, 2vw, 1.5rem);
+  color: var(--color-studio-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: var(--color-studio-400);
+}
+
+.headline {
+  font-size: clamp(2.12rem, 5.2vw, 5.2rem);
+  line-height: 1.04;
+  font-weight: 850;
+  letter-spacing: -0.042em;
+  text-wrap: balance;
+}
+
+.headline span {
+  display: block;
+  padding-block: 0.045em 0.1em;
+  color: var(--color-studio-700);
+  background: linear-gradient(104deg, var(--color-studio-500), var(--color-studio-800) 83%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.primary {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.4rem;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 0.95rem;
+  color: #fff;
+  background: linear-gradient(144deg, var(--color-studio-600), var(--color-studio-800));
+  font-weight: 700;
+  box-shadow: 0 14px 28px -13px var(--color-studio-700), inset 0 1px 0 #ffffff28;
+}
+
+.primary:hover {
+  background: var(--color-studio-800);
+}
+
+.primary:focus-visible {
+  outline: 2px solid var(--color-studio-700);
+  outline-offset: 4px;
+}
+
+.stage {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 1.1;
+  overflow: hidden;
+  border: 1px solid rgb(107 85 201 / 14%);
+  border-radius: clamp(1.5rem, 3.5vw, 2.75rem);
+  background:
+    radial-gradient(ellipse at 58% 27%, #fff 1%, #faf8ffbf 28%, transparent 68%),
+    radial-gradient(ellipse at 20% 78%, #d5c7fa 0, transparent 60%),
+    linear-gradient(151deg, #e3dcf7 7%, #f2ecff 61%, #e5d9f9);
+  box-shadow: inset 0 1px 0 #fff, 0 38px 70px -47px #4d368975;
+}
+
+.stage::before {
+  position: absolute;
+  content: "";
+  inset: 0;
+  background-image:
+    repeating-radial-gradient(circle at 50% 48%, transparent 0 12%, rgb(102 75 167 / 12%) 12.1% 12.24%, transparent 12.37% 17%),
+    linear-gradient(0deg, transparent 49.85%, rgb(102 75 167 / 12%) 50%, transparent 50.15%);
+  mask-image: radial-gradient(ellipse, transparent 27%, #000 59%, transparent 90%);
+}
+
+.stage::after {
+  position: absolute;
+  content: "";
+  inset: 78% 10% 7%;
+  z-index: -1;
+  background: radial-gradient(ellipse, #53417c6b, #7651bb30 39%, transparent 70%);
+  filter: blur(14px);
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.fallback > span {
+  grid-area: 1 / 1;
+  display: block;
+  width: 42%;
+  aspect-ratio: 1.03;
+  border-radius: 50%;
+  box-shadow: inset 0 8px 14px #3344a245, 0 9px 18px #36427a3d;
+}
+
+.fallback > span:first-child {
+  border: clamp(0.9rem, 3.7vw, 2.75rem) solid #9b83e8;
+  border-block-start-color: #c8b6fa;
+  transform: translateX(-25%) rotate(29deg) scaleY(1.15);
+}
+
+.fallback > span:last-child {
+  border: clamp(0.9rem, 3.7vw, 2.75rem) solid #f7f3ff;
+  border-block-end-color: #cdbcf3;
+  transform: translateX(25%) rotate(-27deg) scaleY(0.86);
+}
+
+.stage:has([data-ready="true"]) .fallback {
+  visibility: hidden;
+}
+
+.stage .artwork {
+  position: absolute;
+  inset: 0;
+}
+
+@media (min-width: 1024px) {
+  .process {
+    position: relative;
+    padding-top: 1.25rem;
+    view-timeline-name: --process-steps;
+  }
+
+  .process::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(to left, var(--color-studio-600), var(--color-studio-200));
+    transform-origin: right center;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .process::before {
+      animation: process-progress linear both;
+      animation-timeline: --process-steps;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+
+@keyframes process-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 879px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding-block-start: 2rem;
+  }
+
+  .stage {
+    max-height: 27rem;
+  }
+
+  .headline {
+    font-size: clamp(2.15rem, 9vw, 4.4rem);
+  }
+}

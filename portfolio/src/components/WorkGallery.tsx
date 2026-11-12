@@ -28,7 +28,7 @@ export default function WorkGallery({ work }: { work: Work }) {
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video src={`/api/files/${m.id}`} preload="metadata" muted playsInline className="w-full" />
                 <span className="absolute inset-0 grid place-items-center">
-                  <span className="grid size-11 place-items-center rounded-full bg-mint-600/90 text-white shadow-lift backdrop-blur">
+                  <span className="grid size-11 place-items-center rounded-full bg-studio-600/90 text-white shadow-lift backdrop-blur">
                     <Play className="size-5 fill-current" />
                   </span>
                 </span>
@@ -42,7 +42,7 @@ export default function WorkGallery({ work }: { work: Work }) {
                 className="w-full transition duration-500 group-hover:scale-[1.02]"
               />
             ) : (
-              <span className="grid aspect-[4/3] w-full place-items-center bg-mint-50 text-sm font-bold text-mint-700">
+              <span className="grid aspect-[4/3] w-full place-items-center bg-studio-50 text-sm font-bold text-studio-700">
                 {m.ext.replace(".", "").toUpperCase()}
               </span>
             )}

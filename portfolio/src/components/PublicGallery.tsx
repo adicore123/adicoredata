@@ -2,205 +2,157 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Play, Search, Star } from "lucide-react";
-import type { Work } from "@/lib/types";
-import { coverOf, isVideo } from "@/lib/types";
+import { ArrowUpLeft, File, Images, Play, Search, Star } from "lucide-react";
+import { coverOf, isImage, isVideo, type Work } from "@/lib/types";
 import MediaLightbox from "@/components/MediaLightbox";
 import Reveal from "@/components/Reveal";
 import Tilt3D from "@/components/Tilt3D";
 
-/** אולפן בהיר — Bento grid, כרטיסים לבנים עם זוהר אמרלד, וידאו בריחוף וחשיפה בגלילה */
+function ProjectCard({ work, prominent, onPreview }: { work: Work; prominent: boolean; onPreview: () => void }) {
+  const cover = coverOf(work);
+  return (
+    <Tilt3D className="h-full">
+      <article
+        className="group relative flex h-full flex-col rounded-3xl border border-studio-100/80 bg-white/85 p-2 shadow-soft backdrop-blur-xl"
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "mouse" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          event.currentTarget.querySelector("video")?.play().catch(() => {});
+        }}
+        onPointerLeave={(event) => event.currentTarget.querySelector("video")?.pause()}
+      >
+        <Link
+          href={`/portfolio/work/${work.id}`}
+          className="flex grow flex-col rounded-[1.15rem] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-studio-600"
+        >
+          <div className={`relative grid place-items-center overflow-hidden rounded-[1.1rem] bg-[linear-gradient(135deg,#ded3fb,#f3eefe_61%,#e8deff)] px-5 pt-5 sm:px-8 sm:pt-8 ${prominent ? "aspect-[16/9]" : "aspect-[4/3]"}`}>
+            {cover && (isImage(cover) || isVideo(cover)) ? (
+              <div className="relative h-full w-full max-w-4xl overflow-hidden rounded-t-xl border border-white/70 bg-white shadow-[0_8px_32px_#33415538] motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:scale-[1.035]">
+                <div aria-hidden className="flex h-5 items-center gap-1 border-b border-studio-100/80 bg-slate-50 px-2" dir="ltr">
+                  <span className="size-1.5 rounded-full bg-slate-300" />
+                  <span className="size-1.5 rounded-full bg-slate-300" />
+                  <span className="size-1.5 rounded-full bg-slate-300" />
+                </div>
+                {isVideo(cover) ? (
+                  <>
+                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                    <video src={`/api/files/${cover.id}`} preload="metadata" muted loop playsInline className="absolute inset-x-0 top-5 h-[calc(100%-1.25rem)] w-full object-cover" />
+                    <span className="absolute inset-0 grid place-items-center transition-opacity group-hover:opacity-0">
+                      <span className="grid size-12 place-items-center rounded-full bg-white/95 text-studio-700 shadow-lg">
+                        <Play aria-hidden className="size-5 fill-current" />
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={`/api/files/${cover.id}`} alt="" loading="lazy" className="absolute inset-x-0 top-5 h-[calc(100%-1.25rem)] w-full object-cover object-top" />
+                )}
+              </div>
+            ) : (
+              <File aria-hidden className="size-10 text-studio-500" />
+            )}
+            {work.featured && (
+              <span title="עבודה מודגשת" className="absolute end-3 top-3 grid size-8 place-items-center rounded-full bg-white text-amber-600 shadow-sm">
+                <Star aria-hidden className="size-4 fill-current" />
+                <span className="sr-only">עבודה מודגשת</span>
+              </span>
+            )}
+          </div>
+          <div className="flex grow items-center justify-between gap-3 px-3 pb-3 pt-4 sm:px-4">
+            <div className="min-w-0">
+              {(work.category || work.year) && (
+                <p className="mb-1 font-copy text-sm font-bold text-studio-700">{[work.category, work.year].filter(Boolean).join(" · ")}</p>
+              )}
+              <h3 className={`break-words font-bold leading-snug text-ink ${prominent ? "text-xl sm:text-2xl" : "text-lg"}`}>{work.title}</h3>
+              {work.client && <p className="mt-1 font-copy text-base text-muted">{work.client}</p>}
+            </div>
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-studio-100 bg-white text-studio-700 transition-colors group-hover:border-studio-200 group-hover:bg-studio-50">
+              <ArrowUpLeft aria-hidden className="size-4" />
+            </span>
+          </div>
+        </Link>
+        {work.media.length > 1 && (
+          <button type="button" onClick={onPreview} className="mb-2 ms-3 inline-flex min-h-10 w-fit items-center gap-2 rounded-xl bg-studio-50 px-3 text-sm font-semibold text-studio-800 transition-colors hover:bg-studio-100 focus-visible:outline-2 focus-visible:outline-studio-600 sm:ms-4">
+            <Images aria-hidden className="size-4" />
+            תצוגה מקדימה ({work.media.length})
+          </button>
+        )}
+      </article>
+    </Tilt3D>
+  );
+}
+
 export default function PublicGallery({ works }: { works: Work[] }) {
-  const [category, setCategory] = useState<string>("");
+  const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<{ work: Work; index: number } | null>(null);
-
-  const categories = useMemo(
-    () => [...new Set(works.map((w) => w.category).filter(Boolean))],
-    [works],
-  );
-
+  const categories = useMemo(() => [...new Set(works.map((work) => work.category).filter(Boolean))], [works]);
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let out = works;
-    if (category) out = out.filter((w) => w.category === category);
-    if (q) out = out.filter((w) => `${w.title} ${w.description} ${w.tags.join(" ")}`.toLowerCase().includes(q));
-    return [...out].sort((a, b) => Number(b.featured) - Number(a.featured));
+    const term = query.trim().toLowerCase();
+    return works.filter((work) => (
+      (!category || work.category === category) &&
+      (!term || `${work.title} ${work.description} ${work.tags.join(" ")}`.toLowerCase().includes(term))
+    )).sort((a, b) => Number(b.featured) - Number(a.featured));
   }, [works, category, query]);
 
-  const playHover = (el: HTMLElement | null, play: boolean) => {
-    const video = el?.querySelector("video");
-    if (!video) return;
-    if (play) video.play().catch(() => {});
-    else video.pause();
-  };
-
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-5 py-10 shadow-soft sm:px-8 sm:py-14">
-      {/* זוהר אמרלד עדין מלמעלה */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(50%_100%_at_50%_0%,rgba(16,185,129,0.08),transparent)]"
-      />
-
-      <Reveal className="relative">
-        <p className="text-sm font-black tracking-wide text-emerald-600">— תיק העבודות</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-3xl font-black text-slate-900 sm:text-4xl">עבודות נבחרות</h2>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-            {filtered.length} פרויקטים
-          </span>
-        </div>
-      </Reveal>
+    <section aria-labelledby="work-title">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-studio-100 pb-5">
+        <h2 id="work-title" className="text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold tracking-[-0.045em] text-ink">עבודות נבחרות</h2>
+        {works.length > 0 && <span className="font-copy text-base text-muted" aria-live="polite">{filtered.length} {filtered.length === 1 ? "פרויקט" : "פרויקטים"}</span>}
+      </div>
 
       {(categories.length > 0 || works.length > 3) && (
-        <Reveal delay={80} className="relative mt-6 flex flex-wrap items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setCategory("")}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                  !category
-                    ? "bg-emerald-600 text-white shadow-soft"
-                    : "border border-slate-200 bg-white text-slate-500 hover:border-emerald-300 hover:text-emerald-700"
-                }`}
-              >
-                הכול
-              </button>
-              {categories.map((c) => (
+            <div className="flex flex-wrap gap-2" aria-label="סינון לפי קטגוריה" role="group">
+              {["", ...categories].map((item) => (
                 <button
-                  key={c}
-                  onClick={() => setCategory(category === c ? "" : c)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                    category === c
-                      ? "bg-emerald-600 text-white shadow-soft"
-                      : "border border-slate-200 bg-white text-slate-500 hover:border-emerald-300 hover:text-emerald-700"
-                  }`}
+                  key={item}
+                  type="button"
+                  aria-pressed={category === item}
+                  onClick={() => setCategory(item)}
+                  className="min-h-10 rounded-full border border-studio-100 bg-white px-4 text-sm font-semibold text-muted transition-colors hover:border-studio-300 aria-pressed:border-studio-600 aria-pressed:bg-studio-600 aria-pressed:text-white"
                 >
-                  {c}
+                  {item || "הכול"}
                 </button>
               ))}
             </div>
           )}
           {works.length > 3 && (
             <label className="relative ms-auto min-w-44 flex-1 sm:max-w-64">
-              <Search className="absolute top-1/2 start-3.5 size-4 -translate-y-1/2 text-slate-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="חיפוש עבודה…"
-                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 ps-10 pe-4 text-sm text-slate-700 shadow-soft outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-              />
+              <Search aria-hidden className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+              <span className="sr-only">חיפוש עבודה</span>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="חיפוש עבודה…" className="w-full rounded-xl border border-studio-100 bg-white py-2.5 pe-4 ps-9 text-sm focus-visible:outline-2 focus-visible:outline-studio-600" />
             </label>
           )}
-        </Reveal>
+        </div>
       )}
 
-      {filtered.length === 0 ? (
-        <div className="relative mt-10 grid place-items-center rounded-3xl border-2 border-dashed border-slate-200 px-6 py-16 text-center">
-          <p className="text-lg font-bold text-slate-600">עדיין אין עבודות להצגה</p>
-          <p className="mt-1 max-w-sm text-sm text-slate-400">העבודות יופיעו כאן ברגע שיפורסמו.</p>
+      {filtered.length ? (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
+          {filtered.map((work, index) => (
+            <Reveal
+              key={work.id}
+              delay={Math.min(index, 4) * 55}
+              className={index === 0 ? (filtered.length === 1 ? "sm:col-span-2 lg:col-span-5" : "lg:col-span-4") : "lg:col-span-2"}
+            >
+              <ProjectCard work={work} prominent={index === 0} onPreview={() => setPreview({ work, index: 0 })} />
+            </Reveal>
+          ))}
         </div>
       ) : (
-        <div className="relative mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {filtered.map((work, idx) => {
-            const cover = coverOf(work);
-            const big = idx === 0;
-            const span = big ? (works.length === 1 ? "lg:col-span-6" : "lg:col-span-4") : "lg:col-span-2";
-            return (
-              <Reveal key={work.id} delay={Math.min(idx, 6) * 70} className={span}>
-                <Tilt3D className="h-full">
-                  <article
-                    onMouseEnter={(e) => playHover(e.currentTarget, true)}
-                    onMouseLeave={(e) => playHover(e.currentTarget, false)}
-                    className={`group relative h-full overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-soft transition-all duration-500 hover:border-emerald-300 hover:shadow-[0_24px_60px_-20px_rgba(16,185,129,0.45)] ${
-                      big ? "aspect-[16/10] lg:aspect-auto" : "aspect-[4/3]"
-                    } lg:h-full`}
-                  >
-                    <Link
-                      href={`/portfolio/work/${work.id}`}
-                      className="absolute inset-0"
-                      aria-label={work.title}
-                    >
-                      {cover ? (
-                        isVideo(cover) ? (
-                          <>
-                            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                            <video
-                              src={`/api/files/${cover.id}`}
-                              preload="metadata"
-                              muted
-                              loop
-                              playsInline
-                              className="size-full object-cover transition duration-700 group-hover:scale-105"
-                            />
-                            <span className="absolute inset-0 grid place-items-center bg-slate-950/25 transition group-hover:bg-slate-950/10">
-                              <span className="grid size-12 place-items-center rounded-full bg-white/90 text-emerald-600 shadow-lift transition duration-300 group-hover:scale-110">
-                                <Play className="size-6 fill-current" />
-                              </span>
-                            </span>
-                          </>
-                        ) : cover.mime.startsWith("image/") ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={`/api/files/${cover.id}`}
-                            alt={work.title}
-                            loading="lazy"
-                            className="size-full object-cover transition duration-700 group-hover:scale-105"
-                          />
-                        ) : (
-                          <span className="grid size-full place-items-center bg-emerald-50 text-4xl">📄</span>
-                        )
-                      ) : (
-                        <span className="grid size-full place-items-center bg-emerald-50/60 text-4xl">🗂️</span>
-                      )}
-
-                      <span className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
-                      {work.featured && (
-                        <span className="absolute end-3 top-3 grid size-8 place-items-center rounded-full bg-white/90 text-amber-400 shadow-soft backdrop-blur">
-                          <Star className="size-4 fill-current" />
-                        </span>
-                      )}
-                      <span className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
-                        <span className="flex items-center gap-2">
-                          {work.category && (
-                            <span className="rounded-full bg-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-50 backdrop-blur">
-                              {work.category}
-                            </span>
-                          )}
-                          {work.year && <span className="text-[11px] font-semibold text-white/60">{work.year}</span>}
-                        </span>
-                        <span className={`mt-1.5 block font-bold leading-snug drop-shadow-sm ${big ? "text-xl sm:text-2xl" : "text-base"}`}>
-                          {work.title}
-                        </span>
-                        {work.client && (
-                          <span className="mt-0.5 block truncate text-xs text-white/70">{work.client}</span>
-                        )}
-                      </span>
-                    </Link>
-                    {work.media.length > 1 && (
-                      <button
-                        onClick={() => setPreview({ work, index: 0 })}
-                        className="absolute bottom-4 start-4 z-10 rounded-xl bg-white/90 px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-soft backdrop-blur transition hover:scale-105 hover:bg-white"
-                        title="תצוגה מקדימה מהירה"
-                      >
-                        תצוגה מקדימה ({work.media.length})
-                      </button>
-                    )}
-                  </article>
-                </Tilt3D>
-              </Reveal>
-            );
-          })}
+        <div className="mt-6 rounded-3xl border border-studio-100 bg-white px-6 py-12 text-center">
+          <p className="font-bold text-muted">{works.length ? "לא נמצאו עבודות שמתאימות לחיפוש" : "עדיין אין עבודות להצגה"}</p>
+          {works.length > 0 && <button type="button" onClick={() => { setQuery(""); setCategory(""); }} className="mt-3 font-semibold text-studio-700 underline">איפוס סינון</button>}
         </div>
       )}
 
-      {preview && preview.work.media.length > 0 && (
+      {preview && (
         <MediaLightbox
           items={preview.work.media}
           index={preview.index}
           title={preview.work.title}
-          onIndex={(i) => setPreview({ work: preview.work, index: i })}
+          onIndex={(index) => setPreview({ work: preview.work, index })}
           onClose={() => setPreview(null)}
         />
       )}

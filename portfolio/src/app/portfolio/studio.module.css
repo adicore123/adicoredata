@@ -177,6 +177,11 @@
 
   .stage {
     max-height: 27rem;
+    aspect-ratio: 1;
+  }
+
+  .stage::before {
+    background: radial-gradient(ellipse at 50% 40%, #ffffff70, transparent 65%);
   }
 
   .headline {

@@ -6,7 +6,7 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { ACESFilmicToneMapping, MathUtils, type Group } from "three";
 import { createStudioSculpture } from "@/lib/studioSculpture";
 
-type StudioInput = { x: number; y: number; scroll: number };
+type StudioInput = { x: number; y: number; scroll: number; dragging: boolean };
 
 class CanvasBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -26,7 +26,7 @@ function StudioLights() {
       <ambientLight intensity={0.65} />
       <directionalLight position={[-4, 6, 5]} intensity={2.4} color="#f9f7ff" />
       <directionalLight position={[5, 2, -3]} intensity={1.55} color="#b6b5ff" />
-      <Environment frames={1} resolution={128} environmentIntensity={1.1}>
+      <Environment frames={1} resolution={256} environmentIntensity={1.1}>
         <Lightformer form="rect" intensity={5} position={[-4, 4, 4]} target={[0, 0, 0]} scale={[5, 1.55, 1]} />
         <Lightformer form="rect" intensity={4} position={[3, 1, -4]} target={[0, 0, 0]} scale={[1.25, 5, 1]} color="#d1ccff" />
         <Lightformer form="rect" intensity={2} position={[0, 5, 0]} target={[0, 0, 0]} scale={[6, 3, 1]} />
@@ -42,7 +42,7 @@ function Sculpture({ input, animate, compact, reduced }: { input: StudioInput; a
   const time = useRef(0);
   const aspect = useThree((state) => state.size.width / Math.max(state.size.height, 1));
   const fit = Math.min(1, aspect / 1.08);
-  const ribbon = useMemo(() => createStudioSculpture(compact ? 112 : 192, compact ? 16 : 24), [compact]);
+  const ribbon = useMemo(() => createStudioSculpture(compact ? 256 : 320, 48), [compact]);
   useEffect(() => () => ribbon.dispose(), [ribbon]);
 
   useFrame((_, dt) => {
@@ -68,26 +68,26 @@ function Sculpture({ input, animate, compact, reduced }: { input: StudioInput; a
         <mesh geometry={ribbon}>
           <meshPhysicalMaterial
             vertexColors
-            roughness={0.22}
-            metalness={compact ? 0.24 : 0.09}
+            roughness={0.26}
+            metalness={compact ? 0.3 : 0.09}
             transmission={compact ? 0 : 0.36}
             thickness={0.45}
             ior={1.46}
             attenuationColor="#9690f8"
             attenuationDistance={1.5}
-            iridescence={0.34}
+            iridescence={0.28}
             clearcoat={1}
-            clearcoatRoughness={0.13}
+            clearcoatRoughness={0.19}
           />
         </mesh>
         <group rotation={[-0.94, 0.22, -0.35]} scale={[1.13, 1, 1]}>
           <mesh>
-            <torusGeometry args={[2.04, 0.021, 12, 96]} />
-            <meshStandardMaterial color="#d9d6ff" metalness={0.76} roughness={0.24} />
+            <torusGeometry args={[2.04, 0.035, 24, 192]} />
+            <meshStandardMaterial color="#b5a7e5" metalness={0.65} roughness={0.32} />
           </mesh>
           <group ref={orbit}>
             <mesh position={[1.73, 1.08, 0]}>
-              <sphereGeometry args={[0.17, 24, 16]} />
+              <sphereGeometry args={[0.17, 40, 32]} />
               <meshPhysicalMaterial color="#f2edff" metalness={0.48} roughness={0.19} clearcoat={0.8} />
             </mesh>
           </group>
@@ -121,7 +121,8 @@ function CanvasStatus({ onReady }: { onReady: (ready: boolean) => void }) {
 
 export default function Hero3D() {
   const stage = useRef<HTMLDivElement>(null);
-  const input = useRef<StudioInput>({ x: 0, y: 0, scroll: 0 }).current;
+  const input = useRef<StudioInput>({ x: 0, y: 0, scroll: 0, dragging: false }).current;
+  const touchOrigin = useRef<{ id: number; x: number; y: number; startX: number; startY: number } | null>(null);
   const [visible, setVisible] = useState(false);
   const [compact, setCompact] = useState(true);
   const [reduced, setReduced] = useState(true);
@@ -161,6 +162,8 @@ export default function Hero3D() {
     if (!visible || reduced) {
       input.x = 0;
       input.y = 0;
+      input.dragging = false;
+      touchOrigin.current = null;
       return;
     }
     const pointer = (event: PointerEvent) => {
@@ -169,7 +172,7 @@ export default function Hero3D() {
       input.y = 1 - (event.clientY / window.innerHeight) * 2;
     };
     const orientation = (event: DeviceOrientationEvent) => {
-      if (!compact || event.gamma == null || event.beta == null) return;
+      if (!compact || input.dragging || event.gamma == null || event.beta == null) return;
       input.x = MathUtils.clamp(event.gamma / 38, -1, 1);
       input.y = MathUtils.clamp((event.beta - 40) / 45, -1, 1);
     };
@@ -190,11 +193,33 @@ export default function Hero3D() {
   const animate = visible && !reduced;
 
   return (
-    <div ref={stage} className="absolute inset-0" data-rendering={animate && ready} data-ready={ready}>
+    <div
+      ref={stage}
+      className="absolute inset-0 touch-pan-y"
+      data-rendering={animate && ready}
+      data-ready={ready}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "touch" || reduced || !event.isPrimary) return;
+        touchOrigin.current = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: input.x, startY: input.y };
+        input.dragging = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        const origin = touchOrigin.current;
+        if (!origin || origin.id !== event.pointerId) return;
+        const width = Math.max(event.currentTarget.clientWidth, 1);
+        input.x = MathUtils.clamp(origin.startX + (event.clientX - origin.x) / width * 4, -2, 2);
+        input.y = MathUtils.clamp(origin.startY - (event.clientY - origin.y) / width * 2, -1, 1);
+      }}
+      onLostPointerCapture={() => {
+        touchOrigin.current = null;
+        input.dragging = false;
+      }}
+    >
       {(visible || ready) && (
         <CanvasBoundary>
           <Canvas
-            dpr={[1, compact ? 1.25 : 1.75]}
+            dpr={[1.5, 2]}
             frameloop={!visible ? "never" : reduced ? "demand" : "always"}
             camera={{ position: [0, 0.06, 7.1], fov: 41 }}
             gl={{
@@ -203,7 +228,7 @@ export default function Hero3D() {
               toneMapping: ACESFilmicToneMapping,
               powerPreference: compact ? "default" : "high-performance",
             }}
-            onCreated={({ gl }) => { gl.transmissionResolutionScale = 0.65; }}
+            onCreated={({ gl }) => { gl.transmissionResolutionScale = 1; }}
             fallback={null}
           >
             <StudioLights />
